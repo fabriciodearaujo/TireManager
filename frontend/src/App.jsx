@@ -123,16 +123,18 @@ const MainLayout = ({ children }) => {
       </aside>
 
       <div className="flex-1 min-w-0 flex flex-col">
-        <header className="sticky top-0 z-10 bg-white border-b border-gray-200 px-4 sm:px-6 py-3 flex items-center gap-3">
-          <button onClick={() => setIsSidebarOpen(true)} className="lg:hidden p-1.5 rounded-md hover:bg-gray-100 text-gray-600">
-            <Menu className="w-5 h-5" />
-          </button>
-          <h1 className="text-sm font-semibold text-gray-700">TireManager</h1>
-          <div className="ml-auto flex items-center gap-2">
-            <span className="hidden sm:inline-block text-xs text-gray-400">Junho 2025</span>
-            <span className="w-2 h-2 rounded-full bg-green-400 inline-block"></span>
-          </div>
-        </header>
+          <header className="sticky top-0 z-10 bg-white border-b border-gray-200 px-4 sm:px-6 py-3 flex items-center gap-3">
+            <button onClick={() => setIsSidebarOpen(true)} className="lg:hidden p-1.5 rounded-md hover:bg-gray-100 text-gray-600">
+              <Menu className="w-5 h-5" />
+            </button>
+            <h1 className="text-sm font-semibold text-gray-700">TireManager</h1>
+            <div className="ml-auto flex items-center gap-2">
+              <span className="hidden sm:inline-block text-xs text-gray-400">
+                {new Date().toLocaleString('pt-BR', { month: 'long', year: 'numeric' })}
+              </span>
+              <span className="w-2 h-2 rounded-full bg-green-400 inline-block"></span>
+            </div>
+          </header>
 
         <main className="flex-1 overflow-y-auto p-4 sm:p-6">
           {children}
