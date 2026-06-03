@@ -1,0 +1,43 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  
+  --color-brand-50: #e8f4ff;
+  --color-brand-100: #c3e0ff;
+  --color-brand-200: #85bfff;
+  --color-brand-300: #4d9ef7;
+  --color-brand-400: #2181f0;
+  --color-brand-500: #0d68d8;
+  --color-brand-600: #0a52b0;
+  --color-brand-700: #083d88;
+  --color-brand-800: #052860;
+  --color-brand-900: #031640;
+  
+  --color-surface: #f4f6f9;
+  --color-panel: #ffffff;
+}
+
+body {
+  font-family: var(--font-sans);
+  background: var(--color-surface);
+}
+
+.font-mono {
+  font-family: var(--font-mono);
+}
+
+.badge {
+  @apply inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium;
+}
+
+.badge-installed { @apply bg-green-100 text-green-800; }
+.badge-stock     { @apply bg-blue-100 text-blue-800; }
+.badge-reform    { @apply bg-amber-100 text-amber-800; }
+.badge-discard   { @apply bg-red-100 text-red-800; }
+.badge-new       { @apply bg-purple-100 text-purple-800; }
+
+.stat-card {
+  @apply bg-white rounded-xl p-4 shadow-sm border-t-4;
+}
