@@ -156,7 +156,7 @@ const Historico = () => {
             <div className="space-y-2 border-t border-gray-100 pt-4">
               <div className="flex justify-between text-xs"><span className="text-gray-400">Data de compra</span><span className="text-gray-600">{data.pneu.data_compra || '—'}</span></div>
               <div className="flex justify-between text-xs"><span className="text-gray-400">Valor de compra</span><span className="text-gray-600">R$ {data.pneu.valor_compra || '0,00'}</span></div>
-              <div className="flex justify-between text-xs"><span className="text-gray-400">Gasto com reformas</span><span className="text-gray-600">R$ {data.metrics.totalL_ReformasCost?.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) || data.metrics.totalReformasCost.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span></div>
+              <div className="flex justify-between text-xs"><span className="text-gray-400">Gasto com reformas</span><span className="text-gray-600">R$ {data.metrics.totalReformasCost.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span></div>
               <div className="flex justify-between text-xs"><span className="text-gray-400">Reformas realizadas</span><span className="text-gray-600 font-medium">{data.pneu.qtd_reformas}×</span></div>
             </div>
           </div>
