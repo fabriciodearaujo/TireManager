@@ -1,14 +1,46 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
+import { Search, Loader2 } from 'lucide-react';
 
 const Movimentacoes = () => {
   const [installForm, setInstallForm] = useState({ pneu_id: '', veiculo_id: '', tipo: 'instalacao', posicao: 'Dianteiro esquerdo', quilometragem: '', data: '' });
   const [removeForm, setRemoveForm] = useState({ pneu_id: '', tipo: 'remocao', quilometragem: '', motivo: 'desgaste', data: '', observacoes: '' });
+  
+  const [vehicleSearch, setVehicleSearch] = useState('');
+  const [vehicleSuggestions, setVehicleSuggestions] = useState([]);
+  const [isSearchingVehicle, setIsSearchingVehicle] = useState(false);
+
+  useEffect(() => {
+    const handleVehicleSearch = async () => {
+      if (vehicleSearch.length < 2) {
+        setVehicleSuggestions([]);
+        return;
+      }
+
+      setIsSearchingVehicle(true);
+      try {
+        const { data, error } = await supabase
+          .from('veiculos')
+          .select('id, placa, frota')
+          .ilike('placa', `%${vehicleSearch}%`)
+          .limit(10);
+
+        if (error) throw error;
+        setVehicleSuggestions(data);
+      } catch (err) {
+        console.error('Error searching vehicles:', err);
+      } finally {
+        setIsSearchingVehicle(false);
+      }
+    };
+
+    const timeoutId = setTimeout(handleVehicleSearch, 300);
+    return () => clearTimeout(timeoutId);
+  }, [vehicleSearch]);
 
   const handleInstall = async (e) => {
     e.preventDefault();
     try {
-      // 1. Fetch current pneu condition
       const { data: pneu, error: pneuFetchError } = await supabase
         .from('pneus')
         .select('condicao')
@@ -17,14 +49,12 @@ const Movimentacoes = () => {
       
       if (pneuFetchError) throw new Error('Pneu não encontrado com este ID');
 
-      // 2. Register installation
       const { error: movError } = await supabase
         .from('movimentacoes')
         .insert([{ ...installForm, data: installForm.data || new Date().toISOString() }]);
       
       if (movError) throw movError;
 
-      // 3. Determine new condition if applicable
       let newCondition = pneu.condicao || 'Pneu novo';
       if (pneu.condicao === 'Pneu novo') {
         newCondition = 'Novo Usado';
@@ -32,7 +62,6 @@ const Movimentacoes = () => {
         newCondition = 'Reformado Usado';
       }
 
-      // 4. Update pneu status and condition
       const { error: pneuError } = await supabase
         .from('pneus')
         .update({ status: 'instalado', condicao: newCondition })
@@ -42,6 +71,7 @@ const Movimentacoes = () => {
 
       alert('Instalação registrada!');
       setInstallForm({ pneu_id: '', veiculo_id: '', tipo: 'instalacao', posicao: 'Dianteiro esquerdo', quilometragem: '', data: '' });
+      setVehicleSearch('');
     } catch (err) {
       alert('Erro ao registrar instalação: ' + err.message);
     }
@@ -50,14 +80,12 @@ const Movimentacoes = () => {
   const handleRemove = async (e) => {
     e.preventDefault();
     try {
-      // 1. Register removal
       const { error: movError } = await supabase
         .from('movimentacoes')
         .insert([{ ...removeForm, data: removeForm.data || new Date().toISOString() }]);
       
       if (movError) throw movError;
 
-      // 2. Determine status and condition
       let newStatus = 'estoque';
       let newConditionUpdate = {};
       if (removeForm.motivo === 'reforma') {
@@ -67,7 +95,6 @@ const Movimentacoes = () => {
         newConditionUpdate = { condicao: 'Sucata' };
       }
 
-      // 3. Update pneu status and condition
       const { error: pneuError } = await supabase
         .from('pneus')
         .update({ status: newStatus, ...newConditionUpdate })
@@ -96,10 +123,46 @@ const Movimentacoes = () => {
               <label className="text-xs text-gray-500">ID Pneu</label>
               <input required type="number" value={installForm.pneu_id} onChange={e => setInstallForm({...installForm, pneu_id: e.target.value})} className="border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-brand-400 font-mono" />
             </div>
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs text-gray-500">ID Veículo</label>
-              <input required type="number" value={installForm.veiculo_id} onChange={e => setInstallForm({...installForm, veiculo_id: e.target.value})} className="border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-brand-400" />
+            
+            <div className="flex flex-col gap-1.5 relative">
+              <label className="text-xs text-gray-500">Veículo (Placa)</label>
+              <div className="relative">
+                <input 
+                  required 
+                  type="text" 
+                  value={vehicleSearch} 
+                  onChange={e => setVehicleSearch(e.target.value.toUpperCase())} 
+                  placeholder="Ex: ABC-1D23" 
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-brand-400 uppercase font-mono" 
+                />
+                <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                  {isSearchingVehicle ? <Loader2 className="w-4 h-4 text-gray-400 animate-spin" /> : <Search className="w-4 h-4 text-gray-400" />}
+                </div>
+              </div>
+              {vehicleSuggestions.length > 0 && (
+                <div className="absolute z-10 w-full bg-white border border-gray-200 rounded-lg mt-1 shadow-lg max-h-40 overflow-y-auto">
+                  {vehicleSuggestions.map(v => (
+                    <button 
+                      key={v.id} 
+                      type="button"
+                      onClick={() => {
+                        setInstallForm({...installForm, veiculo_id: v.id});
+                        setVehicleSearch(v.placa);
+                        setVehicleSuggestions([]);
+                      }}
+                      className="w-full text-left px-3 py-2 text-xs hover:bg-gray-50 border-b border-gray-50 last:border-none flex justify-between"
+                    >
+                      <span className="font-bold">{v.placa}</span>
+                      <span className="text-gray-400">{v.frota || 'S/ Frota'}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+              {installForm.veiculo_id && (
+                <p className="text-[10px] text-green-600 font-medium">Veículo selecionada ✓</p>
+              )}
             </div>
+
             <div className="flex flex-col gap-1.5">
               <label className="text-xs text-gray-500">Posição</label>
               <select value={installForm.posicao} onChange={e => setInstallForm({...installForm, posicao: e.target.value})} className="border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-brand-400 bg-white">
@@ -165,4 +228,3 @@ const Movimentacoes = () => {
 };
 
 export default Movimentacoes;
-
