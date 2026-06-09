@@ -6,7 +6,7 @@ const Pneus = () => {
   const [pneus, setPneus] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState({
-    serial_number: '', marca: '', modelo: '', medida: '', dot: '', data_compra: '', valor_compra: ''
+    serial_number: '', marca: '', modelo: '', medida: '', dot: '', data_compra: '', valor_compra: '', condicao: 'Pneu novo'
   });
 
   useEffect(() => {
@@ -34,7 +34,7 @@ const Pneus = () => {
       if (error) throw error;
       
       setIsModalOpen(false);
-      setFormData({ serial_number: '', marca: '', modelo: '', medida: '', dot: '', data_compra: '', valor_compra: '' });
+      setFormData({ serial_number: '', marca: '', modelo: '', medida: '', dot: '', data_compra: '', valor_compra: '', condicao: 'Pneu novo' });
       fetchPneus();
     } catch (err) {
       alert('Erro ao salvar pneu: ' + err.message);
@@ -79,6 +79,7 @@ const Pneus = () => {
                 <th className="text-left px-5 py-3 text-xs font-medium text-gray-400 uppercase tracking-wide">Nº série</th>
                 <th className="text-left px-5 py-3 text-xs font-medium text-gray-400 uppercase tracking-wide">Marca</th>
                 <th className="text-left px-5 py-3 text-xs font-medium text-gray-400 uppercase tracking-wide">Medida</th>
+                <th className="text-left px-5 py-3 text-xs font-medium text-gray-400 uppercase tracking-wide">Descrição</th>
                 <th className="text-left px-5 py-3 text-xs font-medium text-gray-400 uppercase tracking-wide">Status</th>
                 <th className="text-left px-5 py-3 text-xs font-medium text-gray-400 uppercase tracking-wide">Reformas</th>
                 <th className="px-5 py-3">Ações</th>
@@ -90,6 +91,17 @@ const Pneus = () => {
                   <td className="px-5 py-3 font-mono text-xs">{p.serial_number}</td>
                   <td className="px-5 py-3 font-medium text-gray-700">{p.marca}</td>
                   <td className="px-5 py-3 text-gray-500 font-mono text-xs">{p.medida}</td>
+                  <td className="px-5 py-3">
+                    <span className={`badge ${
+                      p.condicao === 'Pneu novo' ? 'badge-new' :
+                      p.condicao === 'Novo Usado' ? 'badge-stock' :
+                      p.condicao === 'Reformado' ? 'badge-reform' :
+                      p.condicao === 'Reformado Usado' ? 'badge-installed' :
+                      'badge-discard'
+                    }`}>
+                      {p.condicao || 'Pneu novo'}
+                    </span>
+                  </td>
                   <td className="px-5 py-3">
                     <span className={`badge badge-${p.status}`}>{p.status}</span>
                   </td>
@@ -151,6 +163,16 @@ const Pneus = () => {
               <div className="flex flex-col gap-1.5">
                 <label className="text-xs text-gray-500">Valor de compra (R$)</label>
                 <input type="number" step="0.01" value={formData.valor_compra} onChange={e => setFormData({...formData, valor_compra: e.target.value})} className="border border-gray-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-brand-400" />
+              </div>
+              <div className="flex flex-col gap-1.5 sm:col-span-2">
+                <label className="text-xs text-gray-500">Descrição / Condição *</label>
+                <select required value={formData.condicao} onChange={e => setFormData({...formData, condicao: e.target.value})} className="border border-gray-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-brand-400 bg-white">
+                  <option>Pneu novo</option>
+                  <option>Novo Usado</option>
+                  <option>Reformado</option>
+                  <option>Reformado Usado</option>
+                  <option>Sucata</option>
+                </select>
               </div>
               <div className="px-6 pb-5 flex gap-3 justify-end sm:col-span-2">
                 <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">Cancelar</button>

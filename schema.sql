@@ -27,6 +27,7 @@ CREATE TABLE pneus (
     data_compra DATE,
     valor_compra DECIMAL(10, 2),
     status pneu_status DEFAULT 'novo',
+    condicao VARCHAR(50) DEFAULT 'Pneu novo' CHECK (condicao IN ('Pneu novo', 'Novo Usado', 'Reformado', 'Reformado Usado', 'Sucata')),
     qtd_reformas INTEGER DEFAULT 0,
     vida_util_acumulada INTEGER DEFAULT 0, -- in km
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP

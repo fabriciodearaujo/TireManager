@@ -8,17 +8,34 @@ const Movimentacoes = () => {
   const handleInstall = async (e) => {
     e.preventDefault();
     try {
-      // 1. Register installation
+      // 1. Fetch current pneu condition
+      const { data: pneu, error: pneuFetchError } = await supabase
+        .from('pneus')
+        .select('condicao')
+        .eq('id', installForm.pneu_id)
+        .single();
+      
+      if (pneuFetchError) throw new Error('Pneu não encontrado com este ID');
+
+      // 2. Register installation
       const { error: movError } = await supabase
         .from('movimentacoes')
         .insert([{ ...installForm, data: installForm.data || new Date().toISOString() }]);
       
       if (movError) throw movError;
 
-      // 2. Update pneu status
+      // 3. Determine new condition if applicable
+      let newCondition = pneu.condicao || 'Pneu novo';
+      if (pneu.condicao === 'Pneu novo') {
+        newCondition = 'Novo Usado';
+      } else if (pneu.condicao === 'Reformado') {
+        newCondition = 'Reformado Usado';
+      }
+
+      // 4. Update pneu status and condition
       const { error: pneuError } = await supabase
         .from('pneus')
-        .update({ status: 'instalado' })
+        .update({ status: 'instalado', condicao: newCondition })
         .eq('id', installForm.pneu_id);
       
       if (pneuError) throw pneuError;
@@ -40,15 +57,20 @@ const Movimentacoes = () => {
       
       if (movError) throw movError;
 
-      // 2. Determine status
+      // 2. Determine status and condition
       let newStatus = 'estoque';
-      if (removeForm.motivo === 'reforma') newStatus = 'reforma';
-      else if (removeForm.motivo === 'descarte') newStatus = 'descartado';
+      let newConditionUpdate = {};
+      if (removeForm.motivo === 'reforma') {
+        newStatus = 'reforma';
+      } else if (removeForm.motivo === 'descarte') {
+        newStatus = 'descartado';
+        newConditionUpdate = { condicao: 'Sucata' };
+      }
 
-      // 3. Update pneu status
+      // 3. Update pneu status and condition
       const { error: pneuError } = await supabase
         .from('pneus')
-        .update({ status: newStatus })
+        .update({ status: newStatus, ...newConditionUpdate })
         .eq('id', removeForm.pneu_id);
       
       if (pneuError) throw pneuError;

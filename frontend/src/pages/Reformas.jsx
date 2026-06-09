@@ -59,7 +59,11 @@ const Reformas = () => {
       const { data: reform, error: refError } = await supabase.from('reformas').select('pneu_id').eq('id', id).single();
       if (refError || !reform) throw refError;
 
-      const { error: pneuError } = await supabase.from('pneus').update({ status: 'estoque' }).eq('id', reform.pneu_id);
+      const { error: pneuError } = await supabase
+        .from('pneus')
+        .update({ status: 'estoque', condicao: 'Reformado' })
+        .eq('id', reform.pneu_id);
+      
       if (pneuError) throw pneuError;
 
       alert('Reforma concluída!');
