@@ -121,7 +121,7 @@ const MainLayout = ({ children }) => {
           </div>
         </div>
         <div className="px-5 py-3 bg-gray-50 border-t border-gray-100 text-center">
-          <p className="text-[10px] text-gray-400">Desenvolvido por: <strong className="text-gray-600">Fabrício Araújo</strong></p>
+          <p className="text-[10px] text-gray-400">Desenvolvido por: <a href="https://www.linkedin.com/in/fabriciopereiraaraujo/" target="_blank" rel="noopener noreferrer" className="text-gray-600 font-semibold hover:text-brand-500 transition-colors underline decoration-gray-300 underline-offset-2">Fabrício Araújo</a></p>
         </div>
       </aside>
 
