@@ -4,7 +4,13 @@ import { Download, ArrowLeft, Loader2, FileText } from 'lucide-react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
+const MOV_TYPE_LABELS = {
+  instalacao: 'Instalação',
+  remocao: 'Remoção',
+};
+
 const Relatorios = () => {
+
   const [selectedReport, setSelectedReport] = useState(null);
   const [reportData, setReportData] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -133,7 +139,7 @@ const Relatorios = () => {
             'Data': m.data,
             'Série': m.pneus?.serial_number,
             'Placa': m.veiculos?.placa,
-            'Tipo': m.tipo,
+            'Tipo': MOV_TYPE_LABELS[m.tipo] || m.tipo,
             'Km': m.quilometragem
           }));
           break;

@@ -2,7 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { supabase } from '../supabaseClient';
 import { AlertCircle as AlertIcon, Clock as ClockIcon } from 'lucide-react';
 
+const MOV_TYPE_LABELS = {
+  instalacao: 'Instalação',
+  remocao: 'Remoção',
+};
+
 const Dashboard = () => {
+// ... existing code ...
+
   const [stats, setStats] = useState(null);
   const [recentMovs, setRecentMovs] = useState([]);
   const [loadingStats, setLoadingStats] = useState(true);
@@ -162,7 +169,7 @@ const Dashboard = () => {
                     <td className="px-5 py-3 text-gray-400">{new Date(mov.data).toLocaleDateString()}</td>
                     <td className="px-5 py-3">
                       <span className={`badge ${mov.tipo === 'instalacao' ? 'badge-installed' : 'badge-reform'}`}>
-                        {mov.tipo}
+                        {MOV_TYPE_LABELS[mov.tipo] || mov.tipo}
                       </span>
                     </td>
                   </tr>
