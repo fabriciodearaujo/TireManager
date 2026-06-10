@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 import { Download, ArrowLeft, Loader2, FileText } from 'lucide-react';
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 
 const Relatorios = () => {
   const [selectedReport, setSelectedReport] = useState(null);
@@ -52,7 +52,7 @@ const Relatorios = () => {
       const headers = [Object.keys(data[0])];
       const rows = data.map(row => Object.values(row));
       
-      doc.autoTable({
+      autoTable(doc, {
         startY: 35,
         head: headers,
         body: rows,
@@ -250,5 +250,6 @@ const Relatorios = () => {
 };
 
 export default Relatorios;
+
 
 
