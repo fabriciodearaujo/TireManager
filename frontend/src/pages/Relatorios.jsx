@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 import { Download, ArrowLeft, Loader2, FileText } from 'lucide-react';
 import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
+import 'jspdf-autotable';
 
 const Relatorios = () => {
   const [selectedReport, setSelectedReport] = useState(null);
@@ -36,8 +36,12 @@ const Relatorios = () => {
   };
 
   const exportToPDF = (data, title) => {
-    if (data.length === 0) return;
+    if (data.length === 0) {
+      alert('Não há dados para exportar');
+      return;
+    }
     try {
+      console.log('Iniciando geração de PDF...');
       const doc = new jsPDF();
       
       doc.setFontSize(18);
@@ -48,7 +52,7 @@ const Relatorios = () => {
       const headers = [Object.keys(data[0])];
       const rows = data.map(row => Object.values(row));
       
-      autoTable(doc, {
+      doc.autoTable({
         startY: 35,
         head: headers,
         body: rows,
@@ -57,9 +61,10 @@ const Relatorios = () => {
       });
       
       doc.save(`${title.toLowerCase().replace(/ /g, '_')}.pdf`);
+      console.log('PDF gerado com sucesso');
     } catch (err) {
-      console.error('Error generating PDF:', err);
-      alert('Erro ao gerar arquivo PDF');
+      console.error('Erro crítico ao gerar PDF:', err);
+      alert('Erro ao gerar arquivo PDF: ' + err.message);
     }
   };
 
@@ -245,4 +250,5 @@ const Relatorios = () => {
 };
 
 export default Relatorios;
+
 
