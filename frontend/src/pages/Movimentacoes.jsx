@@ -5,12 +5,17 @@ import { Search as SearchIcon, Loader2 as LoaderIcon } from 'lucide-react';
 const Movimentacoes = () => {
   // Forms
   const [installForm, setInstallForm] = useState({ pneu_id: '', veiculo_id: '', tipo: 'instalacao', posicao: 'Dianteiro esquerdo', quilometragem: '', data: '' });
-  const [removeForm, setRemoveForm] = useState({ pneu_id: '', tipo: 'remocao', quilometragem: '', motivo: 'desgaste', data: '', observacoes: '' });
+  const [removeForm, setRemoveForm] = useState({ pneu_id: '', veiculo_id: '', tipo: 'remocao', quilometragem: '', motivo: 'desgaste', data: '', observacoes: '' });
   
   // Vehicle Search (Installation)
   const [vehicleSearch, setVehicleSearch] = useState('');
   const [vehicleSuggestions, setVehicleSuggestions] = useState([]);
   const [isSearchingVehicle, setIsSearchingVehicle] = useState(false);
+
+  // Vehicle Search (Removal)
+  const [vehicleSearchRemove, setVehicleSearchRemove] = useState('');
+  const [vehicleSuggestionsRemove, setVehicleSuggestionsRemove] = useState([]);
+  const [isSearchingVehicleRemove, setIsSearchingVehicleRemove] = useState(false);
 
   // Pneu Search (Installation)
   const [pneuSearchInstall, setPneuSearchInstall] = useState('');
@@ -50,7 +55,33 @@ const Movimentacoes = () => {
     return () => clearTimeout(timeoutId);
   }, [vehicleSearch]);
 
-  // 2. Pneu Search Effect (Installation) - Filter only in stock/new tires
+  // 2. Vehicle Search Effect (Removal)
+  useEffect(() => {
+    const handleVehicleSearchRemove = async () => {
+      if (vehicleSearchRemove.length < 2) {
+        setVehicleSuggestionsRemove([]);
+        return;
+      }
+      setIsSearchingVehicleRemove(true);
+      try {
+        const { data, error } = await supabase
+          .from('veiculos')
+          .select('id, placa, frota')
+          .ilike('placa', `%${vehicleSearchRemove}%`)
+          .limit(10);
+        if (error) throw error;
+        setVehicleSuggestionsRemove(data);
+      } catch (err) {
+        console.error('Error searching vehicles for removal:', err);
+      } finally {
+        setIsSearchingVehicleRemove(false);
+      }
+    };
+    const timeoutId = setTimeout(handleVehicleSearchRemove, 300);
+    return () => clearTimeout(timeoutId);
+  }, [vehicleSearchRemove]);
+
+  // 3. Pneu Search Effect (Installation) - Filter only in stock/new tires
   useEffect(() => {
     const handlePneuSearchInstall = async () => {
       if (pneuSearchInstall.length < 2) {
@@ -156,8 +187,8 @@ const Movimentacoes = () => {
 
   const handleRemove = async (e) => {
     e.preventDefault();
-    if (!removeForm.pneu_id) {
-      alert('Selecione um pneu válido da lista de sugestões.');
+    if (!removeForm.pneu_id || !removeForm.veiculo_id) {
+      alert('Selecione um pneu e um veículo válidos da lista de sugestões.');
       return;
     }
 
@@ -188,8 +219,9 @@ const Movimentacoes = () => {
       if (pneuError) throw pneuError;
 
       alert('Remoção registrada com sucesso!');
-      setRemoveForm({ pneu_id: '', tipo: 'remocao', quilometragem: '', motivo: 'desgaste', data: '', observacoes: '' });
+      setRemoveForm({ pneu_id: '', veiculo_id: '', tipo: 'remocao', quilometragem: '', motivo: 'desgaste', data: '', observacoes: '' });
       setPneuSearchRemove('');
+      setVehicleSearchRemove('');
       setSelectedPneuRemove(null);
     } catch (err) {
       alert('Erro ao registrar remoção: ' + err.message);
@@ -363,16 +395,56 @@ const Movimentacoes = () => {
                   ))}
                 </div>
               )}
-              {selectedPneuRemove && (
-                <div className="text-[10px] flex items-center justify-between mt-1">
-                  <span className="text-green-600 font-medium">Pneu selecionado ✓</span>
-                  <span className="text-gray-500">Condição: <strong className="text-amber-600">{selectedPneuRemove.condicao || 'Instalado'}</strong></span>
-                </div>
-              )}
-            </div>
-            
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs text-gray-500">Quilometragem</label>
+               {selectedPneuRemove && (
+                 <div className="text-[10px] flex items-center justify-between mt-1">
+                   <span className="text-green-600 font-medium">Pneu selecionado ✓</span>
+                   <span className="text-gray-500">Condição: <strong className="text-amber-600">{selectedPneuRemove.condicao || 'Instalado'}</strong></span>
+                 </div>
+               )}
+             </div>
+             
+             {/* Campo: Veículo (Placa) - Remoção */}
+             <div className="flex flex-col gap-1.5 relative">
+               <label className="text-xs text-gray-500">Veículo (Placa)</label>
+               <div className="relative">
+                 <input 
+                   required 
+                   type="text" 
+                   value={vehicleSearchRemove} 
+                   onChange={e => setVehicleSearchRemove(e.target.value.toUpperCase())} 
+                   placeholder="Ex: ABC-1D23" 
+                   className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-brand-400 uppercase font-mono" 
+                 />
+                 <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                   {isSearchingVehicleRemove ? <LoaderIcon className="w-4 h-4 text-gray-400 animate-spin" /> : <SearchIcon className="w-4 h-4 text-gray-400" />}
+                 </div>
+               </div>
+               {vehicleSuggestionsRemove.length > 0 && (
+                 <div className="absolute z-10 w-full bg-white border border-gray-200 rounded-lg mt-1 shadow-lg max-h-40 overflow-y-auto">
+                   {vehicleSuggestionsRemove.map(v => (
+                     <button 
+                       key={v.id} 
+                       type="button"
+                       onClick={() => {
+                         setRemoveForm({...removeForm, veiculo_id: v.id});
+                         setVehicleSearchRemove(v.placa);
+                         setVehicleSuggestionsRemove([]);
+                       }}
+                       className="w-full text-left px-3 py-2 text-xs hover:bg-gray-50 border-b border-gray-50 last:border-none flex justify-between"
+                     >
+                       <span className="font-bold">{v.placa}</span>
+                       <span className="text-gray-400">{v.frota || 'S/ Frota'}</span>
+                     </button>
+                   ))}
+                 </div>
+               )}
+               {removeForm.veiculo_id && (
+                 <p className="text-[10px] text-green-600 font-medium mt-1">Veículo selecionado ✓</p>
+               )}
+             </div>
+             
+             <div className="flex flex-col gap-1.5">
+               <label className="text-xs text-gray-500">Quilometragem</label>
               <input required type="number" value={removeForm.quilometragem} onChange={e => setRemoveForm({...removeForm, quilometragem: e.target.value})} className="border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-brand-400" />
             </div>
             <div className="flex flex-col gap-1.5">
