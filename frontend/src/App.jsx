@@ -120,6 +120,9 @@ const MainLayout = ({ children }) => {
             </button>
           </div>
         </div>
+        <div className="px-5 py-3 bg-gray-50 border-t border-gray-100 text-center">
+          <p className="text-[10px] text-gray-400">Desenvolvido por: <strong className="text-gray-600">Fabrício Araújo</strong></p>
+        </div>
       </aside>
 
       <div className="flex-1 min-w-0 flex flex-col">
