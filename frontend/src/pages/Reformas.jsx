@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../supabaseClient';
-import { Plus, X } from 'lucide-react';
+import { Plus, X, Search, Loader2 } from 'lucide-react';
 
 const Reformas = () => {
   const [reformas, setReformas] = useState([]);
@@ -9,9 +9,41 @@ const Reformas = () => {
     pneu_id: '', empresa: '', valor: '', data_envio: '', data_retorno: '', numero_reforma: '', observacoes: ''
   });
 
+  // Tire Search (Reform)
+  const [pneuSearch, setPneuSearch] = useState('');
+  const [pneuSuggestions, setPneuSuggestions] = useState([]);
+  const [isSearchingPneu, setIsSearchingPneu] = useState(false);
+  const [selectedPneu, setSelectedPneu] = useState(null);
+
   useEffect(() => {
     fetchReformas();
   }, []);
+
+  // Pneu Search Effect
+  useEffect(() => {
+    const handlePneuSearch = async () => {
+      if (pneuSearch.length < 2) {
+        setPneuSuggestions([]);
+        return;
+      }
+      setIsSearchingPneu(true);
+      try {
+        const { data, error } = await supabase
+          .from('pneus')
+          .select('id, serial_number, marca, status')
+          .ilike('serial_number', `%${pneuSearch}%`)
+          .limit(10);
+        if (error) throw error;
+        setPneuSuggestions(data);
+      } catch (err) {
+        console.error('Error searching pneus:', err);
+      } finally {
+        setIsSearchingPneu(false);
+      }
+    };
+    const timeoutId = setTimeout(handlePneuSearch, 300);
+    return () => clearTimeout(timeoutId);
+  }, [pneuSearch]);
 
   const fetchReformas = async () => {
     try {
@@ -29,6 +61,10 @@ const Reformas = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!formData.pneu_id) {
+      alert('Selecione um pneu válido da lista de sugestões.');
+      return;
+    }
     try {
       // 1. Register reform
       const { error: refError } = await supabase.from('reformas').insert([formData]);
@@ -48,6 +84,8 @@ const Reformas = () => {
 
       setIsModalOpen(false);
       setFormData({ pneu_id: '', empresa: '', valor: '', data_envio: '', data_retorno: '', numero_reforma: '', observacoes: '' });
+      setPneuSearch('');
+      setSelectedPneu(null);
       fetchReformas();
     } catch (err) {
       alert('Erro ao salvar reforma: ' + err.message);
@@ -126,9 +164,47 @@ const Reformas = () => {
               </button>
             </div>
             <form onSubmit={handleSubmit} className="px-6 py-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="flex flex-col gap-1.5 sm:col-span-2">
-                <label className="text-xs text-gray-500">ID Pneu *</label>
-                <input required type="number" value={formData.pneu_id} onChange={e => setFormData({...formData, pneu_id: e.target.value})} className="border border-gray-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-brand-400 font-mono" />
+              <div className="flex flex-col gap-1.5 sm:col-span-2 relative">
+                <label className="text-xs text-gray-500">Pneu (Nº Série) *</label>
+                <div className="relative">
+                  <input 
+                    required 
+                    type="text" 
+                    value={pneuSearch} 
+                    onChange={e => setPneuSearch(e.target.value)} 
+                    placeholder="Ex: PN-001" 
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-brand-400 font-mono" 
+                  />
+                  <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                    {isSearchingPneu ? <Loader2 className="w-4 h-4 text-gray-400 animate-spin" /> : <Search className="w-4 h-4 text-gray-400" />}
+                  </div>
+                </div>
+                {pneuSuggestions.length > 0 && (
+                  <div className="absolute z-10 w-full bg-white border border-gray-200 rounded-lg mt-1 shadow-lg max-h-40 overflow-y-auto">
+                    {pneuSuggestions.map(p => (
+                      <button 
+                        key={p.id} 
+                        type="button"
+                        onClick={() => {
+                          setFormData({...formData, pneu_id: p.id});
+                          setPneuSearch(p.serial_number);
+                          setSelectedPneu(p);
+                          setPneuSuggestions([]);
+                        }}
+                        className="w-full text-left px-3 py-2 text-xs hover:bg-gray-50 border-b border-gray-50 last:border-none flex justify-between"
+                      >
+                        <span className="font-mono font-bold">{p.serial_number}</span>
+                        <span className="text-gray-400">{p.marca}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+                {selectedPneu && (
+                  <div className="text-[10px] flex items-center justify-between mt-1">
+                    <span className="text-green-600 font-medium">Pneu selecionado ✓</span>
+                    <span className="text-gray-500">Status atual: <strong className="text-brand-600">{selectedPneu.status}</strong></span>
+                  </div>
+                )}
               </div>
               <div className="flex flex-col gap-1.5">
                 <label className="text-xs text-gray-500">Empresa</label>
