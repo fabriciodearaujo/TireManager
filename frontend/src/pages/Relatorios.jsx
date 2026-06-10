@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 import { Download, ArrowLeft, Loader2, FileText } from 'lucide-react';
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 
 const Relatorios = () => {
   const [selectedReport, setSelectedReport] = useState(null);
@@ -23,9 +23,9 @@ const Relatorios = () => {
     const headers = Object.keys(data[0]).join(',');
     const rows = data.map(row => 
       Object.values(row).map(val => `"${val}"`).join(',')
-    ).join('\\n');
+    ).join('\n');
     
-    const csvContent = `data:text/csv;charset=utf-8,${headers}\\n${rows}`;
+    const csvContent = `data:text/csv;charset=utf-8,${headers}\n${rows}`;
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement('a');
     link.setAttribute('href', encodedUri);
@@ -37,25 +37,30 @@ const Relatorios = () => {
 
   const exportToPDF = (data, title) => {
     if (data.length === 0) return;
-    const doc = new jsPDF();
-    
-    doc.setFontSize(18);
-    doc.text(title, 14, 20);
-    doc.setFontSize(10);
-    doc.text(`Gerado em: ${new Date().toLocaleString()}`, 14, 28);
-    
-    const headers = [Object.keys(data[0])];
-    const rows = data.map(row => Object.values(row));
-    
-    doc.autoTable({
-      startY: 35,
-      head: headers,
-      body: rows,
-      theme: 'striped',
-      headStyles: { fillColor: [59, 130, 246] }, // Brand color (blue)
-    });
-    
-    doc.save(`${title.toLowerCase().replace(/ /g, '_')}.pdf`);
+    try {
+      const doc = new jsPDF();
+      
+      doc.setFontSize(18);
+      doc.text(title, 14, 20);
+      doc.setFontSize(10);
+      doc.text(`Gerado em: ${new Date().toLocaleString()}`, 14, 28);
+      
+      const headers = [Object.keys(data[0])];
+      const rows = data.map(row => Object.values(row));
+      
+      autoTable(doc, {
+        startY: 35,
+        head: headers,
+        body: rows,
+        theme: 'striped',
+        headStyles: { fillColor: [59, 130, 246] },
+      });
+      
+      doc.save(`${title.toLowerCase().replace(/ /g, '_')}.pdf`);
+    } catch (err) {
+      console.error('Error generating PDF:', err);
+      alert('Erro ao gerar arquivo PDF');
+    }
   };
 
   const fetchReportData = async (reportId) => {
@@ -240,3 +245,4 @@ const Relatorios = () => {
 };
 
 export default Relatorios;
+
