@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
-import { Download, ArrowLeft, Loader2 } from 'lucide-react';
+import { Download, ArrowLeft, Loader2, FileText } from 'lucide-react';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 
 const Relatorios = () => {
   const [selectedReport, setSelectedReport] = useState(null);
@@ -31,6 +33,29 @@ const Relatorios = () => {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  };
+
+  const exportToPDF = (data, title) => {
+    if (data.length === 0) return;
+    const doc = new jsPDF();
+    
+    doc.setFontSize(18);
+    doc.text(title, 14, 20);
+    doc.setFontSize(10);
+    doc.text(`Gerado em: ${new Date().toLocaleString()}`, 14, 28);
+    
+    const headers = [Object.keys(data[0])];
+    const rows = data.map(row => Object.values(row));
+    
+    doc.autoTable({
+      startY: 35,
+      head: headers,
+      body: rows,
+      theme: 'striped',
+      headStyles: { fillColor: [59, 130, 246] }, // Brand color (blue)
+    });
+    
+    doc.save(`${title.toLowerCase().replace(/ /g, '_')}.pdf`);
   };
 
   const fetchReportData = async (reportId) => {
@@ -134,13 +159,22 @@ const Relatorios = () => {
             <h2 className="text-xl font-semibold text-gray-800">{report.title}</h2>
             <p className="text-sm text-gray-400">{report.desc}</p>
           </div>
-          <button 
-            onClick={() => exportToCSV(reportData, `relatorio_${report.id}`)}
-            disabled={loading || reportData.length === 0}
-            className="flex items-center gap-2 bg-brand-600 hover:bg-brand-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:bg-gray-300"
-          >
-            <Download className="w-4 h-4" /> Exportar CSV
-          </button>
+          <div className="flex gap-2">
+            <button 
+              onClick={() => exportToCSV(reportData, `relatorio_${report.id}`)}
+              disabled={loading || reportData.length === 0}
+              className="flex items-center gap-2 bg-brand-600 hover:bg-brand-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:bg-gray-300"
+            >
+              <Download className="w-4 h-4" /> CSV
+            </button>
+            <button 
+              onClick={() => exportToPDF(reportData, report.title)}
+              disabled={loading || reportData.length === 0}
+              className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:bg-gray-300"
+            >
+              <FileText className="w-4 h-4" /> PDF
+            </button>
+          </div>
         </div>
 
         {loading ? (
