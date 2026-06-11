@@ -13,6 +13,7 @@ const Dashboard = () => {
   const [stats, setStats] = useState(null);
   const [recentMovs, setRecentMovs] = useState([]);
   const [loadingStats, setLoadingStats] = useState(true);
+  const [loadingMovs, setLoadingMovs] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
@@ -47,6 +48,7 @@ const Dashboard = () => {
     };
 
     const fetchMovs = async () => {
+      setLoadingMovs(true);
       try {
         const { data, error: movError } = await supabase
           .from('movimentacoes')
@@ -62,6 +64,8 @@ const Dashboard = () => {
         })));
       } catch (err) {
         console.error('Error fetching movs:', err);
+      } finally {
+        setLoadingMovs(false);
       }
     };
 
@@ -160,24 +164,27 @@ const Dashboard = () => {
                 <th className="text-left px-5 py-3 text-xs font-medium text-gray-400 uppercase tracking-wide">Status</th>
               </tr>
             </thead>
-            <tbody>
-              {recentMovs.length > 0 ? (
-                recentMovs.map((mov) => (
-                  <tr key={mov.id} className="border-b border-gray-50">
-                    <td className="px-5 py-3 font-mono text-xs text-gray-600">{mov.serial_number}</td>
-                    <td className="px-5 py-3 font-medium">{mov.placa || '—'}</td>
-                    <td className="px-5 py-3 text-gray-400">{new Date(mov.data).toLocaleDateString()}</td>
-                    <td className="px-5 py-3">
-                      <span className={`badge ${mov.tipo === 'instalacao' ? 'badge-installed' : 'badge-reform'}`}>
-                        {MOV_TYPE_LABELS[mov.tipo] || mov.tipo}
-                      </span>
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr><td colSpan="4" className="px-5 py-8 text-center text-gray-400 text-xs">Carregando movimentações...</td></tr>
-              )}
-            </tbody>
+               <tbody>
+                 {loadingMovs ? (
+                   <tr><td colSpan="4" className="px-5 py-8 text-center text-gray-400 text-xs">Carregando movimentações...</td></tr>
+                 ) : recentMovs.length > 0 ? (
+                   recentMovs.map((mov) => (
+                     <tr key={mov.id} className="border-b border-gray-50">
+                       <td className="px-5 py-3 font-mono text-xs text-gray-600">{mov.serial_number}</td>
+                       <td className="px-5 py-3 font-medium">{mov.placa || '—'}</td>
+                       <td className="px-5 py-3 text-gray-400">{new Date(mov.data).toLocaleDateString()}</td>
+                       <td className="px-5 py-3">
+                         <span className={`badge ${mov.tipo === 'instalacao' ? 'badge-installed' : 'badge-reform'}`}>
+                           {MOV_TYPE_LABELS[mov.tipo] || mov.tipo}
+                         </span>
+                       </td>
+                     </tr>
+                   ))
+                 ) : (
+                   <tr><td colSpan="4" className="px-5 py-8 text-center text-gray-400 text-xs">Nenhuma movimentação recente encontrada.</td></tr>
+                 )}
+               </tbody>
+
           </table>
         </div>
       </div>
