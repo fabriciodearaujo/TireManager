@@ -86,7 +86,7 @@ const Reformas = () => {
         empresa: formData.empresa || null,
         observacoes: formData.observacoes || null,
       };
-      const { error: refError } = await supabase.from('reformas').insert([payload]);
+      const { data: refData, error: refError } = await supabase.from('reformas').insert([payload]).select('*, pneus(serial_number)');
       if (refError) throw refError;
 
       // 2. Update pneu status and count
@@ -105,7 +105,7 @@ const Reformas = () => {
       setPneuSearch('');
       setSelectedPneu(null);
       setPage(1);
-      fetchReformas();
+      if (refData) setReformas(prev => [{ ...refData[0], serial_number: refData[0].pneus?.serial_number }, ...prev]);
     } catch (err) {
       toast('Erro ao salvar reforma: ' + err.message, 'error');
     }
