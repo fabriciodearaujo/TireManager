@@ -1,12 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import { Plus, Search, X, Trash2 } from 'lucide-react';
 
 const Pneus = () => {
-  const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const statusFilter = searchParams.get('status') || '';
   const [pneus, setPneus] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -19,7 +15,6 @@ const Pneus = () => {
   }, []);
 
   const filteredPneus = pneus.filter(p => {
-    if (statusFilter && p.status !== statusFilter) return false;
     if (!searchTerm) return true;
     const term = searchTerm.toLowerCase();
     return (
@@ -85,12 +80,6 @@ const Pneus = () => {
       <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-3 py-2 mb-4">
         <Search className="w-4 h-4 text-gray-400 shrink-0" />
         <input type="text" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder="Buscar por série, marca ou medida…" className="flex-1 text-sm outline-none bg-transparent text-gray-700 placeholder-gray-400" />
-        {statusFilter && (
-          <span className="text-xs bg-brand-50 text-brand-600 px-2 py-0.5 rounded-full font-medium flex items-center gap-1">
-            {statusFilter}
-            <button onClick={() => navigate('/pneus')} className="hover:text-brand-800">&times;</button>
-          </span>
-        )}
       </div>
 
       <div className="bg-white rounded-xl shadow-sm overflow-hidden">
