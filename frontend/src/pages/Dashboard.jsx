@@ -1,15 +1,19 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../supabaseClient';
 import { AlertCircle as AlertIcon, Clock as ClockIcon } from 'lucide-react';
+import { PieChart, Pie, Cell, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from 'recharts';
 
 const MOV_TYPE_LABELS = {
   instalacao: 'Instalação',
   remocao: 'Remoção',
 };
 
+const COLORS = ['#0d68d8', '#16a34a', '#d97706', '#ef4444'];
+
 const Dashboard = () => {
   const [stats, setStats] = useState(null);
   const [recentMovs, setRecentMovs] = useState([]);
+  const [movementsByMonth, setMovementsByMonth] = useState([]);
   const [loadingStats, setLoadingStats] = useState(true);
   const [loadingMovs, setLoadingMovs] = useState(true);
   const [error, setError] = useState(null);
@@ -19,10 +23,7 @@ const Dashboard = () => {
       try {
         const { data, error: rpcError } = await supabase.rpc('get_dashboard_stats');
         if (rpcError) throw rpcError;
-        
-        if (!data || data.length === 0) {
-          throw new Error('Nenhum dado retornado do servidor');
-        }
+        if (!data || data.length === 0) throw new Error('Nenhum dado retornado do servidor');
 
         const s = data[0];
         setStats({
@@ -53,7 +54,7 @@ const Dashboard = () => {
           .select('*, pneus(serial_number), veiculos(placa)')
           .order('data', { ascending: false })
           .limit(5);
-        
+
         if (movError) throw movError;
         setRecentMovs(data.map(m => ({
           ...m,
@@ -67,8 +68,32 @@ const Dashboard = () => {
       }
     };
 
+    const fetchMovementsByMonth = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('movimentacoes')
+          .select('data, tipo');
+
+        if (error) throw error;
+
+        const monthCount = {};
+        data.forEach(m => {
+          const date = new Date(m.data);
+          const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+          if (!monthCount[key]) monthCount[key] = { mes: key, instalações: 0, remoções: 0 };
+          if (m.tipo === 'instalacao') monthCount[key].instalações++;
+          else monthCount[key].remoções++;
+        });
+
+        setMovementsByMonth(Object.values(monthCount).slice(-6));
+      } catch (err) {
+        console.error('Error fetching monthly movements:', err);
+      }
+    };
+
     fetchStats();
     fetchMovs();
+    fetchMovementsByMonth();
   }, []);
 
   if (error) return (
@@ -81,13 +106,25 @@ const Dashboard = () => {
   );
 
   if (loadingStats) return (
-    <div className="flex items-center justify-center h-64">
-      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-500"></div>
-      <span className="ml-3 text-gray-500">Carregando dados...</span>
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      {[...Array(4)].map((_, i) => (
+        <div key={i} className="bg-white rounded-xl p-4 shadow-sm border-t-4 border-gray-200">
+          <div className="skeleton h-3 w-16 mb-2"></div>
+          <div className="skeleton h-8 w-12 mb-2"></div>
+          <div className="skeleton h-3 w-24"></div>
+        </div>
+      ))}
     </div>
   );
 
   if (!stats) return null;
+
+  const pieData = [
+    { name: 'Estoque', value: stats.pneus.em_estoque },
+    { name: 'Instalados', value: stats.pneus.instalados },
+    { name: 'Reforma', value: stats.pneus.em_reforma },
+    { name: 'Descartados', value: stats.pneus.descartados },
+  ].filter(d => d.value > 0);
 
   return (
     <div>
@@ -127,6 +164,49 @@ const Dashboard = () => {
           <div className="text-xs text-gray-400 italic">Dados consolidados do mês atual.</div>
         </div>
 
+        {/* Pizza Chart */}
+        <div className="bg-white rounded-xl shadow-sm p-5">
+          <p className="text-sm font-medium text-gray-700 mb-4">Distribuição dos pneus</p>
+          {pieData.length > 0 ? (
+            <div className="flex items-center justify-center gap-4">
+              <ResponsiveContainer width={180} height={180}>
+                <PieChart>
+                  <Pie data={pieData} cx="50%" cy="50%" outerRadius={80} dataKey="value" label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
+                    {pieData.map((_, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          ) : (
+            <div className="flex items-center justify-center h-[180px] text-gray-400 text-sm">Nenhum pneu cadastrado</div>
+          )}
+        </div>
+      </div>
+
+      {/* Bar Chart */}
+      <div className="bg-white rounded-xl shadow-sm p-5 mb-6">
+        <p className="text-sm font-medium text-gray-700 mb-4">Movimentações por mês</p>
+        {movementsByMonth.length > 0 ? (
+          <ResponsiveContainer width="100%" height={250}>
+            <BarChart data={movementsByMonth}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+              <XAxis dataKey="mes" tick={{ fontSize: 12 }} />
+              <YAxis allowDecimals={false} tick={{ fontSize: 12 }} />
+              <Tooltip />
+              <Bar dataKey="instalações" fill="#0d68d8" radius={[4, 4, 0, 0]} name="Instalações" />
+              <Bar dataKey="remoções" fill="#d97706" radius={[4, 4, 0, 0]} name="Remoções" />
+            </BarChart>
+          </ResponsiveContainer>
+        ) : (
+          <div className="flex items-center justify-center h-[250px] text-gray-400 text-sm">Nenhuma movimentação registrada</div>
+        )}
+      </div>
+
+      {/* Alertas */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
         <div className="bg-white rounded-xl shadow-sm p-5">
           <p className="text-sm font-medium text-gray-700 mb-4">Alertas Rápidos</p>
           <div className="space-y-3">
@@ -146,44 +226,51 @@ const Dashboard = () => {
             </div>
           </div>
         </div>
-      </div>
 
-      <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-        <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
-          <p className="text-sm font-medium text-gray-700">Últimas movimentações</p>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-gray-100 bg-gray-50">
-                <th className="text-left px-5 py-3 text-xs font-medium text-gray-400 uppercase tracking-wide">Pneu</th>
-                <th className="text-left px-5 py-3 text-xs font-medium text-gray-400 uppercase tracking-wide">Veículo</th>
-                <th className="text-left px-5 py-3 text-xs font-medium text-gray-400 uppercase tracking-wide">Data</th>
-                <th className="text-left px-5 py-3 text-xs font-medium text-gray-400 uppercase tracking-wide">Status</th>
-              </tr>
-            </thead>
-               <tbody>
-                 {loadingMovs ? (
-                   <tr><td colSpan="4" className="px-5 py-8 text-center text-gray-400 text-xs">Carregando movimentações...</td></tr>
-                 ) : recentMovs.length > 0 ? (
-                   recentMovs.map((mov) => (
-                     <tr key={mov.id} className="border-b border-gray-50">
-                       <td className="px-5 py-3 font-mono text-xs text-gray-600">{mov.serial_number}</td>
-                       <td className="px-5 py-3 font-medium">{mov.placa || '—'}</td>
-                       <td className="px-5 py-3 text-gray-400">{new Date(mov.data).toLocaleDateString()}</td>
-                       <td className="px-5 py-3">
-                         <span className={`badge ${mov.tipo === 'instalacao' ? 'badge-installed' : 'badge-reform'}`}>
-                           {MOV_TYPE_LABELS[mov.tipo] || mov.tipo}
-                         </span>
-                       </td>
-                     </tr>
-                   ))
-                 ) : (
-                   <tr><td colSpan="4" className="px-5 py-8 text-center text-gray-400 text-xs">Nenhuma movimentação recente encontrada.</td></tr>
-                 )}
-               </tbody>
-
-          </table>
+        {/* Últimas Movimentações */}
+        <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+          <div className="px-5 py-4 border-b border-gray-100">
+            <p className="text-sm font-medium text-gray-700">Últimas movimentações</p>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-gray-100 bg-gray-50">
+                  <th className="text-left px-5 py-3 text-xs font-medium text-gray-400 uppercase tracking-wide">Pneu</th>
+                  <th className="text-left px-5 py-3 text-xs font-medium text-gray-400 uppercase tracking-wide">Veículo</th>
+                  <th className="text-left px-5 py-3 text-xs font-medium text-gray-400 uppercase tracking-wide">Data</th>
+                  <th className="text-left px-5 py-3 text-xs font-medium text-gray-400 uppercase tracking-wide">Tipo</th>
+                </tr>
+              </thead>
+              <tbody>
+                {loadingMovs ? (
+                  [...Array(3)].map((_, i) => (
+                    <tr key={i} className="border-b border-gray-50">
+                      <td className="px-5 py-4"><div className="skeleton h-4 w-24"></div></td>
+                      <td className="px-5 py-4"><div className="skeleton h-4 w-16"></div></td>
+                      <td className="px-5 py-4"><div className="skeleton h-4 w-20"></div></td>
+                      <td className="px-5 py-4"><div className="skeleton h-4 w-14"></div></td>
+                    </tr>
+                  ))
+                ) : recentMovs.length > 0 ? (
+                  recentMovs.map((mov) => (
+                    <tr key={mov.id} className="border-b border-gray-50">
+                      <td className="px-5 py-3 font-mono text-xs text-gray-600">{mov.serial_number}</td>
+                      <td className="px-5 py-3 font-medium">{mov.placa || '—'}</td>
+                      <td className="px-5 py-3 text-gray-400">{new Date(mov.data).toLocaleDateString()}</td>
+                      <td className="px-5 py-3">
+                        <span className={`badge ${mov.tipo === 'instalacao' ? 'badge-installed' : 'badge-reform'}`}>
+                          {MOV_TYPE_LABELS[mov.tipo] || mov.tipo}
+                        </span>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr><td colSpan="4" className="px-5 py-8 text-center text-gray-400 text-xs">Nenhuma movimentação encontrada.</td></tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>
@@ -191,7 +278,3 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
-
-
-
-

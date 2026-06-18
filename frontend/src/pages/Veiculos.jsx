@@ -1,9 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../supabaseClient';
 import { Plus, Search, X, Trash2 } from 'lucide-react';
+import { useToast } from '../components/Toast';
 
 const Veiculos = () => {
+  const toast = useToast();
   const [veiculos, setVeiculos] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [pneuModal, setPneuModal] = useState(null);
   const [pneuList, setPneuList] = useState([]);
@@ -27,6 +30,7 @@ const Veiculos = () => {
   });
 
   const fetchVeiculos = async () => {
+    setLoading(true);
     try {
       const { data, error } = await supabase
         .from('veiculos')
@@ -37,6 +41,8 @@ const Veiculos = () => {
       setVeiculos(data);
     } catch (err) {
       console.error('Error fetching veiculos:', err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -46,11 +52,12 @@ const Veiculos = () => {
       const { error } = await supabase.from('veiculos').insert([formData]);
       if (error) throw error;
       
+      toast('Veículo cadastrado com sucesso!', 'success');
       setIsModalOpen(false);
       setFormData({ placa: '', frota: '', tipo: 'Cavalo + semirreboque', ano: '', centro_custo: '' });
       fetchVeiculos();
     } catch (err) {
-      alert('Erro ao salvar veículo: ' + err.message);
+      toast('Erro ao salvar veículo: ' + err.message, 'error');
     }
   };
 
@@ -61,9 +68,10 @@ const Veiculos = () => {
     try {
       const { error } = await supabase.from('veiculos').delete().eq('id', id);
       if (error) throw error;
+      toast('Veículo excluído.', 'success');
       fetchVeiculos();
     } catch (err) {
-      alert('Erro ao excluir veículo: ' + err.message);
+      toast('Erro ao excluir veículo: ' + err.message, 'error');
     }
   };
 
@@ -98,7 +106,7 @@ const Veiculos = () => {
       setPneuList(Array.from(pneuMap.values()));
     } catch (err) {
       console.error('Error fetching pneus for vehicle:', err);
-      alert('Erro ao carregar pneus do veículo');
+      toast('Erro ao carregar pneus do veículo', 'error');
     } finally {
       setLoadingPneus(false);
     }
@@ -136,7 +144,19 @@ const Veiculos = () => {
               </tr>
             </thead>
             <tbody>
-              {filteredVeiculos.map(v => (
+              {loading ? (
+                [...Array(4)].map((_, i) => (
+                  <tr key={i} className="border-b border-gray-50">
+                    <td className="px-5 py-3"><div className="skeleton h-4 w-20"></div></td>
+                    <td className="px-5 py-3"><div className="skeleton h-4 w-16"></div></td>
+                    <td className="px-5 py-3"><div className="skeleton h-4 w-24"></div></td>
+                    <td className="px-5 py-3"><div className="skeleton h-4 w-10"></div></td>
+                    <td className="px-5 py-3"><div className="skeleton h-4 w-20"></div></td>
+                    <td className="px-5 py-3"><div className="skeleton h-4 w-12"></div></td>
+                    <td className="px-5 py-3"><div className="skeleton h-4 w-8"></div></td>
+                  </tr>
+                ))
+              ) : filteredVeiculos.length > 0 ? filteredVeiculos.map(v => (
                 <tr key={v.id} className="border-b border-gray-50">
                   <td className="px-5 py-3 font-semibold tracking-wide uppercase">{v.placa}</td>
                   <td className="px-5 py-3 text-gray-500">{v.frota}</td>
@@ -150,7 +170,9 @@ const Veiculos = () => {
                     </button>
                   </td>
                 </tr>
-              ))}
+              )) : (
+                <tr><td colSpan="7" className="px-5 py-8 text-center text-gray-400 text-xs">Nenhum veículo encontrado.</td></tr>
+              )}
             </tbody>
           </table>
         </div>

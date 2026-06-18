@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 import { Search as SearchIcon, Loader2 as LoaderIcon } from 'lucide-react';
+import { useToast } from '../components/Toast';
 
 const Movimentacoes = () => {
+  const toast = useToast();
   // Forms
   const [installForm, setInstallForm] = useState({ pneu_id: '', veiculo_id: '', tipo: 'instalacao', posicao: 'Dianteiro esquerdo', quilometragem: '', data: '' });
   const [removeForm, setRemoveForm] = useState({ pneu_id: '', veiculo_id: '', tipo: 'remocao', quilometragem: '', motivo: 'desgaste', data: '', observacoes: '' });
@@ -138,7 +140,7 @@ const Movimentacoes = () => {
   const handleInstall = async (e) => {
     e.preventDefault();
     if (!installForm.pneu_id || !installForm.veiculo_id) {
-      alert('Selecione um pneu e um veículo válidos da lista de sugestões.');
+      toast('Selecione um pneu e um veículo válidos da lista de sugestões.', 'error');
       return;
     }
 
@@ -175,20 +177,20 @@ const Movimentacoes = () => {
       
       if (pneuError) throw pneuError;
 
-      alert('Instalação registrada com sucesso!');
+      toast('Instalação registrada com sucesso!', 'success');
       setInstallForm({ pneu_id: '', veiculo_id: '', tipo: 'instalacao', posicao: 'Dianteiro esquerdo', quilometragem: '', data: '' });
       setVehicleSearch('');
       setPneuSearchInstall('');
       setSelectedPneuInstall(null);
     } catch (err) {
-      alert('Erro ao registrar instalação: ' + err.message);
+      toast('Erro ao registrar instalação: ' + err.message, 'error');
     }
   };
 
   const handleRemove = async (e) => {
     e.preventDefault();
     if (!removeForm.pneu_id || !removeForm.veiculo_id) {
-      alert('Selecione um pneu e um veículo válidos da lista de sugestões.');
+      toast('Selecione um pneu e um veículo válidos da lista de sugestões.', 'error');
       return;
     }
 
@@ -218,13 +220,13 @@ const Movimentacoes = () => {
       
       if (pneuError) throw pneuError;
 
-      alert('Remoção registrada com sucesso!');
+      toast('Remoção registrada com sucesso!', 'success');
       setRemoveForm({ pneu_id: '', veiculo_id: '', tipo: 'remocao', quilometragem: '', motivo: 'desgaste', data: '', observacoes: '' });
       setPneuSearchRemove('');
       setVehicleSearchRemove('');
       setSelectedPneuRemove(null);
     } catch (err) {
-      alert('Erro ao registrar remoção: ' + err.message);
+      toast('Erro ao registrar remoção: ' + err.message, 'error');
     }
   };
 

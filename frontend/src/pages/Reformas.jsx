@@ -1,9 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../supabaseClient';
 import { Plus, X, Search, Loader2 } from 'lucide-react';
+import { useToast } from '../components/Toast';
 
 const Reformas = () => {
+  const toast = useToast();
   const [reformas, setReformas] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState({
     pneu_id: '', empresa: '', valor: '', data_envio: '', data_retorno: '', numero_reforma: '', observacoes: ''
@@ -46,6 +49,7 @@ const Reformas = () => {
   }, [pneuSearch]);
 
   const fetchReformas = async () => {
+    setLoading(true);
     try {
       const { data, error } = await supabase
         .from('reformas')
@@ -56,13 +60,15 @@ const Reformas = () => {
       setReformas(data.map(r => ({ ...r, serial_number: r.pneus?.serial_number })));
     } catch (err) {
       console.error('Error fetching reformas:', err);
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.pneu_id) {
-      alert('Selecione um pneu válido da lista de sugestões.');
+      toast('Selecione um pneu válido da lista de sugestões.', 'error');
       return;
     }
     try {
@@ -92,7 +98,7 @@ const Reformas = () => {
       setSelectedPneu(null);
       fetchReformas();
     } catch (err) {
-      alert('Erro ao salvar reforma: ' + err.message);
+      toast('Erro ao salvar reforma: ' + err.message, 'error');
     }
   };
 
@@ -113,10 +119,10 @@ const Reformas = () => {
       
       if (pneuError) throw pneuError;
 
-      alert('Reforma concluída!');
+      toast('Reforma concluída!', 'success');
       fetchReformas();
     } catch (err) {
-      alert('Erro ao concluir reforma: ' + err.message);
+      toast('Erro ao concluir reforma: ' + err.message, 'error');
     }
   };
 
@@ -146,7 +152,18 @@ const Reformas = () => {
               </tr>
             </thead>
             <tbody>
-              {reformas.map(r => (
+              {loading ? (
+                [...Array(4)].map((_, i) => (
+                  <tr key={i} className="border-b border-gray-50">
+                    <td className="px-5 py-3"><div className="skeleton h-4 w-20"></div></td>
+                    <td className="px-5 py-3"><div className="skeleton h-4 w-8"></div></td>
+                    <td className="px-5 py-3"><div className="skeleton h-4 w-16"></div></td>
+                    <td className="px-5 py-3"><div className="skeleton h-4 w-20"></div></td>
+                    <td className="px-5 py-3"><div className="skeleton h-4 w-14"></div></td>
+                    <td className="px-5 py-3"><div className="skeleton h-4 w-12"></div></td>
+                  </tr>
+                ))
+              ) : reformas.length > 0 ? reformas.map(r => (
                 <tr key={r.id} className="border-b border-gray-50">
                   <td className="px-5 py-3 font-mono text-xs">{r.serial_number}</td>
                   <td className="px-5 py-3"><span className="badge badge-reform">{r.numero_reforma}ª</span></td>
@@ -157,7 +174,9 @@ const Reformas = () => {
                     <button onClick={() => handleComplete(r.id)} className="text-green-600 hover:text-green-700 text-xs underline">Concluir</button>
                   </td>
                 </tr>
-              ))}
+              )) : (
+                <tr><td colSpan="6" className="px-5 py-8 text-center text-gray-400 text-xs">Nenhuma reforma encontrada.</td></tr>
+              )}
             </tbody>
           </table>
         </div>

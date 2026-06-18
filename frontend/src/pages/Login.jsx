@@ -2,12 +2,14 @@ import React, { useState } from 'react';
 import { supabase } from '../supabaseClient';
 import { useNavigate } from 'react-router-dom';
 import { Lock } from 'lucide-react';
+import { useToast } from '../components/Toast';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const toast = useToast();
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -17,7 +19,7 @@ const Login = () => {
       if (error) throw error;
       navigate('/');
     } catch (err) {
-      alert('Erro ao fazer login: ' + err.message);
+      toast('Erro ao fazer login: ' + err.message, 'error');
     } finally {
       setLoading(false);
     }

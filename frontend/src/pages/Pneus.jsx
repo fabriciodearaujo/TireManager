@@ -2,10 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import { Plus, Search, X, Trash2 } from 'lucide-react';
+import { useToast } from '../components/Toast';
 
 const Pneus = () => {
   const navigate = useNavigate();
+  const toast = useToast();
   const [pneus, setPneus] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [formData, setFormData] = useState({
@@ -27,6 +30,7 @@ const Pneus = () => {
   });
 
   const fetchPneus = async () => {
+    setLoading(true);
     try {
       const { data, error } = await supabase
         .from('pneus')
@@ -37,6 +41,8 @@ const Pneus = () => {
       setPneus(data);
     } catch (err) {
       console.error('Error fetching pneus:', err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -46,11 +52,12 @@ const Pneus = () => {
       const { error } = await supabase.from('pneus').insert([formData]);
       if (error) throw error;
       
+      toast('Pneu cadastrado com sucesso!', 'success');
       setIsModalOpen(false);
       setFormData({ serial_number: '', marca: '', modelo: '', medida: '', dot: '', data_compra: '', valor_compra: '', condicao: 'Pneu novo' });
       fetchPneus();
     } catch (err) {
-      alert('Erro ao salvar pneu: ' + err.message);
+      toast('Erro ao salvar pneu: ' + err.message, 'error');
     }
   };
 
@@ -61,9 +68,10 @@ const Pneus = () => {
     try {
       const { error } = await supabase.from('pneus').delete().eq('id', id);
       if (error) throw error;
+      toast('Pneu excluído.', 'success');
       fetchPneus();
     } catch (err) {
-      alert('Erro ao excluir pneu: ' + err.message);
+      toast('Erro ao excluir pneu: ' + err.message, 'error');
     }
   };
 
@@ -99,7 +107,19 @@ const Pneus = () => {
               </tr>
             </thead>
             <tbody>
-              {filteredPneus.map(p => (
+              {loading ? (
+                [...Array(4)].map((_, i) => (
+                  <tr key={i} className="border-b border-gray-50">
+                    <td className="px-5 py-3"><div className="skeleton h-4 w-20"></div></td>
+                    <td className="px-5 py-3"><div className="skeleton h-4 w-16"></div></td>
+                    <td className="px-5 py-3"><div className="skeleton h-4 w-14"></div></td>
+                    <td className="px-5 py-3"><div className="skeleton h-4 w-24"></div></td>
+                    <td className="px-5 py-3"><div className="skeleton h-4 w-12"></div></td>
+                    <td className="px-5 py-3"><div className="skeleton h-4 w-8"></div></td>
+                    <td className="px-5 py-3"><div className="skeleton h-4 w-12"></div></td>
+                  </tr>
+                ))
+              ) : filteredPneus.length > 0 ? filteredPneus.map(p => (
                 <tr key={p.id} className="border-b border-gray-50">
                   <td className="px-5 py-3 font-mono text-xs">{p.serial_number}</td>
                   <td className="px-5 py-3 font-medium text-gray-700">{p.marca}</td>
@@ -126,7 +146,9 @@ const Pneus = () => {
                     </button>
                   </td>
                 </tr>
-              ))}
+              )) : (
+                <tr><td colSpan="7" className="px-5 py-8 text-center text-gray-400 text-xs">Nenhum pneu encontrado.</td></tr>
+              )}
             </tbody>
           </table>
         </div>

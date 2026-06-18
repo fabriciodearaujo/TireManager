@@ -2,10 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import { Search, Loader2 } from 'lucide-react';
+import { useToast } from '../components/Toast';
 
 const Historico = () => {
   const [searchParams] = useSearchParams();
   const serialParam = searchParams.get('serial');
+  const toast = useToast();
 
   const [searchTerm, setSearchTerm] = useState(serialParam || '');
   const [suggestions, setSuggestions] = useState([]);
@@ -109,7 +111,7 @@ const Historico = () => {
         }
       });
     } catch (err) {
-      alert('Erro ao carregar histórico do pneu');
+      toast('Erro ao carregar histórico do pneu', 'error');
     } finally {
       setLoading(false);
     }

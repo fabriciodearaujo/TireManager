@@ -13,6 +13,7 @@ import {
   LogOut
 } from 'lucide-react';
 import { supabase } from './supabaseClient';
+import ToastProvider from './components/Toast';
 import Dashboard from './pages/Dashboard';
 import Pneus from './pages/Pneus';
 import Veiculos from './pages/Veiculos';
@@ -139,7 +140,7 @@ const MainLayout = ({ children }) => {
             </div>
           </header>
 
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6">
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6 page-enter">
           {children}
         </main>
       </div>
@@ -150,16 +151,18 @@ const MainLayout = ({ children }) => {
 const App = () => {
   return (
     <Router>
-      <Routes>
-        <Route path="/login" element={<Login />} />
-        <Route path="/" element={<ProtectedRoute><MainLayout><Dashboard /></MainLayout></ProtectedRoute>} />
-        <Route path="/pneus" element={<ProtectedRoute><MainLayout><Pneus /></MainLayout></ProtectedRoute>} />
-        <Route path="/veiculos" element={<ProtectedRoute><MainLayout><Veiculos /></MainLayout></ProtectedRoute>} />
-        <Route path="/movimentacoes" element={<ProtectedRoute><MainLayout><Movimentacoes /></MainLayout></ProtectedRoute>} />
-        <Route path="/reformas" element={<ProtectedRoute><MainLayout><Reformas /></MainLayout></ProtectedRoute>} />
-        <Route path="/historico" element={<ProtectedRoute><MainLayout><Historico /></MainLayout></ProtectedRoute>} />
-        <Route path="/relatorios" element={<ProtectedRoute><MainLayout><Relatorios /></MainLayout></ProtectedRoute>} />
-      </Routes>
+      <ToastProvider>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route path="/" element={<ProtectedRoute><MainLayout><Dashboard /></MainLayout></ProtectedRoute>} />
+          <Route path="/pneus" element={<ProtectedRoute><MainLayout><Pneus /></MainLayout></ProtectedRoute>} />
+          <Route path="/veiculos" element={<ProtectedRoute><MainLayout><Veiculos /></MainLayout></ProtectedRoute>} />
+          <Route path="/movimentacoes" element={<ProtectedRoute><MainLayout><Movimentacoes /></MainLayout></ProtectedRoute>} />
+          <Route path="/reformas" element={<ProtectedRoute><MainLayout><Reformas /></MainLayout></ProtectedRoute>} />
+          <Route path="/historico" element={<ProtectedRoute><MainLayout><Historico /></MainLayout></ProtectedRoute>} />
+          <Route path="/relatorios" element={<ProtectedRoute><MainLayout><Relatorios /></MainLayout></ProtectedRoute>} />
+        </Routes>
+      </ToastProvider>
     </Router>
   );
 };

@@ -3,6 +3,7 @@ import { supabase } from '../supabaseClient';
 import { Download, ArrowLeft, Loader2, FileText } from 'lucide-react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { useToast } from '../components/Toast';
 
 const MOV_TYPE_LABELS = {
   instalacao: 'Instalação',
@@ -11,6 +12,7 @@ const MOV_TYPE_LABELS = {
 
 const Relatorios = () => {
 
+  const toast = useToast();
   const [selectedReport, setSelectedReport] = useState(null);
   const [reportData, setReportData] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -46,7 +48,7 @@ const Relatorios = () => {
 
   const exportToPDF = (data, title) => {
     if (data.length === 0) {
-      alert('Não há dados para exportar');
+      toast('Não há dados para exportar', 'error');
       return;
     }
     try {
@@ -73,7 +75,7 @@ const Relatorios = () => {
       console.log('PDF gerado com sucesso');
     } catch (err) {
       console.error('Erro crítico ao gerar PDF:', err);
-      alert('Erro ao gerar arquivo PDF: ' + err.message);
+      toast('Erro ao gerar arquivo PDF: ' + err.message, 'error');
     }
   };
 
@@ -150,7 +152,7 @@ const Relatorios = () => {
       setReportData(data);
     } catch (err) {
       console.error('Error fetching report:', err);
-      alert('Erro ao gerar relatório');
+      toast('Erro ao gerar relatório', 'error');
     } finally {
       setLoading(false);
     }
