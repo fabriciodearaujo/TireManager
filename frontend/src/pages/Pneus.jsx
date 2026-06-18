@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import { Plus, Search, X, Trash2 } from 'lucide-react';
 
 const Pneus = () => {
+  const navigate = useNavigate();
   const [pneus, setPneus] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -118,7 +120,7 @@ const Pneus = () => {
                   </td>
                   <td className="px-5 py-3 text-gray-500">{p.qtd_reformas}×</td>
                   <td className="px-5 py-3 flex items-center gap-3">
-                    <button className="text-brand-500 hover:text-brand-600 text-xs underline">Histórico</button>
+                    <button onClick={() => navigate(`/historico?serial=${p.serial_number}`)} className="text-brand-500 hover:text-brand-600 text-xs underline">Histórico</button>
                     <button onClick={() => handleDelete(p.id)} className="text-red-400 hover:text-red-600 transition-colors" title="Excluir">
                       <Trash2 className="w-4 h-4" />
                     </button>

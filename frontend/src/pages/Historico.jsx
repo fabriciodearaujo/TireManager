@@ -1,14 +1,41 @@
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import { Search, Loader2 } from 'lucide-react';
 
 const Historico = () => {
+  const [searchParams] = useSearchParams();
+  const serialParam = searchParams.get('serial');
 
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState(serialParam || '');
   const [suggestions, setSuggestions] = useState([]);
   const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(!!serialParam);
   const [isSearching, setIsSearching] = useState(false);
+
+  // Auto-load from URL param on mount
+  useEffect(() => {
+    if (serialParam) {
+      const loadFromSerial = async () => {
+        try {
+          const { data: pneus, error } = await supabase
+            .from('pneus')
+            .select('id')
+            .ilike('serial_number', serialParam)
+            .limit(1);
+          
+          if (error) throw error;
+          if (pneus && pneus.length > 0) {
+            loadPneuHistory(pneus[0].id);
+          }
+        } catch (err) {
+          console.error('Error auto-loading history:', err);
+          setLoading(false);
+        }
+      };
+      loadFromSerial();
+    }
+  }, []);
 
   useEffect(() => {
     const handleSearchSuggestions = async () => {
