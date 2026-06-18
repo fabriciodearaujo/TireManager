@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { supabase } from '../supabaseClient';
 import { Plus, Search, X, Trash2 } from 'lucide-react';
 import { useToast } from '../components/Toast';
+import Pagination from '../components/Pagination';
 
 const Veiculos = () => {
   const toast = useToast();
@@ -12,6 +13,10 @@ const Veiculos = () => {
   const [pneuList, setPneuList] = useState([]);
   const [loadingPneus, setLoadingPneus] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [page, setPage] = useState(1);
+  const pageSize = 10;
+
+  useEffect(() => { setPage(1); }, [searchTerm]);
   const [formData, setFormData] = useState({
     placa: '', frota: '', tipo: 'Cavalo + semirreboque', ano: '', centro_custo: ''
   });
@@ -28,6 +33,7 @@ const Veiculos = () => {
       (v.frota && v.frota.toLowerCase().includes(term))
     );
   });
+  const paginatedVeiculos = filteredVeiculos.slice((page - 1) * pageSize, page * pageSize);
 
   const fetchVeiculos = async () => {
     setLoading(true);
@@ -156,7 +162,7 @@ const Veiculos = () => {
                     <td className="px-5 py-3"><div className="skeleton h-4 w-8"></div></td>
                   </tr>
                 ))
-              ) : filteredVeiculos.length > 0 ? filteredVeiculos.map(v => (
+              ) : filteredVeiculos.length > 0 ? paginatedVeiculos.map(v => (
                 <tr key={v.id} className="border-b border-gray-50">
                   <td className="px-5 py-3 font-semibold tracking-wide uppercase">{v.placa}</td>
                   <td className="px-5 py-3 text-gray-500">{v.frota}</td>
@@ -176,11 +182,12 @@ const Veiculos = () => {
             </tbody>
           </table>
         </div>
+        <Pagination current={page} total={filteredVeiculos.length} pageSize={pageSize} onChange={p => setPage(p)} />
       </div>
 
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 modal-overlay">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg modal-content">
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
               <p className="font-semibold text-gray-800">Novo veículo</p>
               <button onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-gray-600">
@@ -224,8 +231,8 @@ const Veiculos = () => {
       )}
 
       {pneuModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 modal-overlay">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg modal-content">
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
               <div>
                 <p className="font-semibold text-gray-800">Pneus do veículo</p>

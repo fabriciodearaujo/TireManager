@@ -2,12 +2,15 @@ import React, { useEffect, useState } from 'react';
 import { supabase } from '../supabaseClient';
 import { Plus, X, Search, Loader2 } from 'lucide-react';
 import { useToast } from '../components/Toast';
+import Pagination from '../components/Pagination';
 
 const Reformas = () => {
   const toast = useToast();
   const [reformas, setReformas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [page, setPage] = useState(1);
+  const pageSize = 10;
   const [formData, setFormData] = useState({
     pneu_id: '', empresa: '', valor: '', data_envio: '', data_retorno: '', numero_reforma: '', observacoes: ''
   });
@@ -17,6 +20,8 @@ const Reformas = () => {
   const [pneuSuggestions, setPneuSuggestions] = useState([]);
   const [isSearchingPneu, setIsSearchingPneu] = useState(false);
   const [selectedPneu, setSelectedPneu] = useState(null);
+
+  const paginatedReformas = reformas.slice((page - 1) * pageSize, page * pageSize);
 
   useEffect(() => {
     fetchReformas();
@@ -163,7 +168,7 @@ const Reformas = () => {
                     <td className="px-5 py-3"><div className="skeleton h-4 w-12"></div></td>
                   </tr>
                 ))
-              ) : reformas.length > 0 ? reformas.map(r => (
+              ) : reformas.length > 0 ? paginatedReformas.map(r => (
                 <tr key={r.id} className="border-b border-gray-50">
                   <td className="px-5 py-3 font-mono text-xs">{r.serial_number}</td>
                   <td className="px-5 py-3"><span className="badge badge-reform">{r.numero_reforma}ª</span></td>
@@ -180,11 +185,12 @@ const Reformas = () => {
             </tbody>
           </table>
         </div>
+        <Pagination current={page} total={reformas.length} pageSize={pageSize} onChange={p => setPage(p)} />
       </div>
 
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 modal-overlay">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg modal-content">
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
               <p className="font-semibold text-gray-800">Registrar reforma</p>
               <button onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-gray-600">

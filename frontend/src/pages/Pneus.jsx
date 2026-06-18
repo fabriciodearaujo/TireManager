@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import { Plus, Search, X, Trash2 } from 'lucide-react';
 import { useToast } from '../components/Toast';
+import Pagination from '../components/Pagination';
+import Tooltip from '../components/Tooltip';
 
 const Pneus = () => {
   const navigate = useNavigate();
@@ -11,6 +13,10 @@ const Pneus = () => {
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [page, setPage] = useState(1);
+  const pageSize = 10;
+
+  useEffect(() => { setPage(1); }, [searchTerm]);
   const [formData, setFormData] = useState({
     serial_number: '', marca: '', modelo: '', medida: '', dot: '', data_compra: '', valor_compra: '', condicao: 'Pneu novo'
   });
@@ -28,6 +34,7 @@ const Pneus = () => {
       p.medida.toLowerCase().includes(term)
     );
   });
+  const paginatedPneus = filteredPneus.slice((page - 1) * pageSize, page * pageSize);
 
   const fetchPneus = async () => {
     setLoading(true);
@@ -119,12 +126,13 @@ const Pneus = () => {
                     <td className="px-5 py-3"><div className="skeleton h-4 w-12"></div></td>
                   </tr>
                 ))
-              ) : filteredPneus.length > 0 ? filteredPneus.map(p => (
+              ) : filteredPneus.length > 0 ? paginatedPneus.map(p => (
                 <tr key={p.id} className="border-b border-gray-50">
                   <td className="px-5 py-3 font-mono text-xs">{p.serial_number}</td>
                   <td className="px-5 py-3 font-medium text-gray-700">{p.marca}</td>
                   <td className="px-5 py-3 text-gray-500 font-mono text-xs">{p.medida}</td>
                   <td className="px-5 py-3">
+                    <Tooltip text={`Condição: ${p.condicao || 'Pneu novo'} · DOT: ${p.dot || '—'}`}>
                     <span className={`badge ${
                       p.condicao === 'Pneu novo' ? 'badge-new' :
                       p.condicao === 'Novo Usado' ? 'badge-stock' :
@@ -134,9 +142,12 @@ const Pneus = () => {
                     }`}>
                       {p.condicao || 'Pneu novo'}
                     </span>
+                    </Tooltip>
                   </td>
                   <td className="px-5 py-3">
+                    <Tooltip text={`Status: ${p.status} · ${p.qtd_reformas} reforma(s)`}>
                     <span className={`badge badge-${p.status}`}>{p.status}</span>
+                    </Tooltip>
                   </td>
                   <td className="px-5 py-3 text-gray-500">{p.qtd_reformas}×</td>
                   <td className="px-5 py-3 flex items-center gap-3">
@@ -152,11 +163,12 @@ const Pneus = () => {
             </tbody>
           </table>
         </div>
+        <Pagination current={page} total={filteredPneus.length} pageSize={pageSize} onChange={p => setPage(p)} />
       </div>
 
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 modal-overlay">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg modal-content">
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
               <p className="font-semibold text-gray-800">Novo pneu</p>
               <button onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-gray-600">

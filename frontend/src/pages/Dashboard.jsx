@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../supabaseClient';
-import { AlertCircle as AlertIcon, Clock as ClockIcon } from 'lucide-react';
+import { Package, Wrench, RefreshCw, Trash2, AlertCircle as AlertIcon, Clock as ClockIcon } from 'lucide-react';
 import { PieChart, Pie, Cell, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from 'recharts';
+import CountUp from '../components/CountUp';
 
 const MOV_TYPE_LABELS = {
   instalacao: 'Instalação',
@@ -9,6 +10,13 @@ const MOV_TYPE_LABELS = {
 };
 
 const COLORS = ['#0d68d8', '#16a34a', '#d97706', '#ef4444'];
+
+const cards = [
+  { key: 'em_estoque', label: 'Em estoque', icon: Package, gradient: 'from-blue-500 to-blue-600', suffix: 'prontos para uso' },
+  { key: 'instalados', label: 'Instalados', icon: Wrench, gradient: 'from-green-500 to-green-600', suffix: 'em operação' },
+  { key: 'em_reforma', label: 'Em reforma', icon: RefreshCw, gradient: 'from-amber-500 to-amber-600', suffix: 'aguardando retorno' },
+  { key: 'descartados', label: 'Descartados', icon: Trash2, gradient: 'from-red-500 to-red-600', suffix: 'no acumulado' },
+];
 
 const Dashboard = () => {
   const [stats, setStats] = useState(null);
@@ -107,12 +115,8 @@ const Dashboard = () => {
 
   if (loadingStats) return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-      {[...Array(4)].map((_, i) => (
-        <div key={i} className="bg-white rounded-xl p-4 shadow-sm border-t-4 border-gray-200">
-          <div className="skeleton h-3 w-16 mb-2"></div>
-          <div className="skeleton h-8 w-12 mb-2"></div>
-          <div className="skeleton h-3 w-24"></div>
-        </div>
+      {cards.map((_, i) => (
+        <div key={i} className="rounded-xl p-5 shadow-sm bg-gray-200 skeleton h-32"></div>
       ))}
     </div>
   );
@@ -129,26 +133,20 @@ const Dashboard = () => {
   return (
     <div>
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <div className="stat-card border-brand-500">
-          <p className="text-xs text-gray-400 mb-1">Em estoque</p>
-          <p className="text-2xl font-semibold text-brand-600">{stats.pneus.em_estoque}</p>
-          <p className="text-xs text-gray-400 mt-1">prontos para uso</p>
-        </div>
-        <div className="stat-card border-green-500">
-          <p className="text-xs text-gray-400 mb-1">Instalados</p>
-          <p className="text-2xl font-semibold text-green-600">{stats.pneus.instalados}</p>
-          <p className="text-xs text-gray-400 mt-1">em operação</p>
-        </div>
-        <div className="stat-card border-amber-500">
-          <p className="text-xs text-gray-400 mb-1">Em reforma</p>
-          <p className="text-2xl font-semibold text-amber-600">{stats.pneus.em_reforma}</p>
-          <p className="text-xs text-gray-400 mt-1">aguardando retorno</p>
-        </div>
-        <div className="stat-card border-red-400">
-          <p className="text-xs text-gray-400 mb-1">Descartados</p>
-          <p className="text-2xl font-semibold text-red-500">{stats.pneus.descartados}</p>
-          <p className="text-xs text-gray-400 mt-1">no acumulado</p>
-        </div>
+        {cards.map(c => {
+          const Icon = c.icon;
+          const value = stats.pneus[c.key];
+          return (
+            <div key={c.key} className={`relative rounded-xl p-5 shadow-sm bg-gradient-to-br ${c.gradient} text-white overflow-hidden`}>
+              <Icon className="absolute right-3 top-3 w-10 h-10 text-white/20" />
+              <p className="text-xs text-white/70 mb-1">{c.label}</p>
+              <p className="text-2xl font-bold">
+                <CountUp end={value} duration={800} />
+              </p>
+              <p className="text-[10px] text-white/50 mt-1">{c.suffix}</p>
+            </div>
+          );
+        })}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
@@ -158,13 +156,12 @@ const Dashboard = () => {
             <span className="text-xs text-gray-400">{new Date().toLocaleString('pt-BR', { month: 'short', year: 'numeric' })}</span>
           </div>
           <div className="flex items-baseline gap-2 mb-4">
-            <span className="text-3xl font-semibold text-violet-600">{stats.reformasMes.total}</span>
+            <span className="text-3xl font-semibold text-violet-600"><CountUp end={stats.reformasMes.total} duration={800} /></span>
             <span className="text-sm text-gray-400">reformas · <strong className="text-gray-600">R$ {stats.reformasMes.custo_total}</strong></span>
           </div>
           <div className="text-xs text-gray-400 italic">Dados consolidados do mês atual.</div>
         </div>
 
-        {/* Pizza Chart */}
         <div className="bg-white rounded-xl shadow-sm p-5">
           <p className="text-sm font-medium text-gray-700 mb-4">Distribuição dos pneus</p>
           {pieData.length > 0 ? (
@@ -186,7 +183,6 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Bar Chart */}
       <div className="bg-white rounded-xl shadow-sm p-5 mb-6">
         <p className="text-sm font-medium text-gray-700 mb-4">Movimentações por mês</p>
         {movementsByMonth.length > 0 ? (
@@ -205,7 +201,6 @@ const Dashboard = () => {
         )}
       </div>
 
-      {/* Alertas */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
         <div className="bg-white rounded-xl shadow-sm p-5">
           <p className="text-sm font-medium text-gray-700 mb-4">Alertas Rápidos</p>
@@ -227,7 +222,6 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Últimas Movimentações */}
         <div className="bg-white rounded-xl shadow-sm overflow-hidden">
           <div className="px-5 py-4 border-b border-gray-100">
             <p className="text-sm font-medium text-gray-700">Últimas movimentações</p>
