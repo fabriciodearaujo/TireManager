@@ -5,6 +5,9 @@ import { Plus, Search, X, Trash2 } from 'lucide-react';
 const Veiculos = () => {
   const [veiculos, setVeiculos] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [pneuModal, setPneuModal] = useState(null);
+  const [pneuList, setPneuList] = useState([]);
+  const [loadingPneus, setLoadingPneus] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [formData, setFormData] = useState({
     placa: '', frota: '', tipo: 'Cavalo + semirreboque', ano: '', centro_custo: ''
@@ -64,6 +67,43 @@ const Veiculos = () => {
     }
   };
 
+  const handleViewPneus = async (veiculo) => {
+    setPneuModal(veiculo);
+    setPneuList([]);
+    setLoadingPneus(true);
+    try {
+      const { data, error } = await supabase
+        .from('movimentacoes')
+        .select('*, pneus(serial_number, marca, medida, condicao)')
+        .eq('veiculo_id', veiculo.id)
+        .eq('tipo', 'instalacao')
+        .order('data', { ascending: false });
+      
+      if (error) throw error;
+
+      // Get unique pneus installed on this vehicle (last install per pneu)
+      const pneuMap = new Map();
+      data.forEach(m => {
+        if (!pneuMap.has(m.pneu_id)) {
+          pneuMap.set(m.pneu_id, {
+            serial_number: m.pneus?.serial_number,
+            marca: m.pneus?.marca,
+            medida: m.pneus?.medida,
+            condicao: m.pneus?.condicao,
+            data_instalacao: m.data,
+            posicao: m.posicao
+          });
+        }
+      });
+      setPneuList(Array.from(pneuMap.values()));
+    } catch (err) {
+      console.error('Error fetching pneus for vehicle:', err);
+      alert('Erro ao carregar pneus do veículo');
+    } finally {
+      setLoadingPneus(false);
+    }
+  };
+
   return (
     <div>
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
@@ -103,7 +143,7 @@ const Veiculos = () => {
                   <td className="px-5 py-3 text-gray-500">{v.tipo}</td>
                   <td className="px-5 py-3 text-gray-400">{v.ano}</td>
                   <td className="px-5 py-3 text-gray-400">{v.centro_custo}</td>
-                  <td className="px-5 py-3"><button className="text-brand-500 hover:text-brand-600 text-xs underline">Ver pneus</button></td>
+                  <td className="px-5 py-3"><button onClick={() => handleViewPneus(v)} className="text-brand-500 hover:text-brand-600 text-xs underline">Ver pneus</button></td>
                   <td className="px-5 py-3">
                     <button onClick={() => handleDelete(v.id)} className="text-red-400 hover:text-red-600 transition-colors" title="Excluir">
                       <Trash2 className="w-4 h-4" />
@@ -157,6 +197,47 @@ const Veiculos = () => {
                 <button type="submit" className="px-4 py-2 text-sm font-medium bg-brand-500 hover:bg-brand-600 text-white rounded-lg transition-colors">Salvar veículo</button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {pneuModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+              <div>
+                <p className="font-semibold text-gray-800">Pneus do veículo</p>
+                <p className="text-xs text-gray-400">{pneuModal.placa} · {pneuModal.frota || 'S/ Frota'}</p>
+              </div>
+              <button onClick={() => setPneuModal(null)} className="text-gray-400 hover:text-gray-600">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="px-6 py-5">
+              {loadingPneus ? (
+                <div className="flex items-center justify-center py-10">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-brand-500"></div>
+                  <span className="ml-2 text-sm text-gray-400">Carregando...</span>
+                </div>
+              ) : pneuList.length > 0 ? (
+                <div className="space-y-2">
+                  {pneuList.map((p, i) => (
+                    <div key={i} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                      <div>
+                        <p className="text-sm font-mono font-medium text-gray-800">{p.serial_number}</p>
+                        <p className="text-xs text-gray-400">{p.marca} · {p.medida}</p>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-xs font-medium text-brand-600">{p.condicao || '—'}</span>
+                        {p.posicao && <p className="text-[10px] text-gray-400 mt-0.5">{p.posicao}</p>}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-10 text-gray-400 text-sm">Nenhum pneu instalado neste veículo.</div>
+              )}
+            </div>
           </div>
         </div>
       )}
