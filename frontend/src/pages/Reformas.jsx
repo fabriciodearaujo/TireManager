@@ -101,10 +101,10 @@ const Reformas = () => {
       
       if (pneuError) throw pneuError;
 
-      setIsModalOpen(false);
       setFormData({ pneu_id: '', empresa: '', valor: '', data_envio: '', data_retorno: '', numero_reforma: '', observacoes: '' });
       setPneuSearch('');
       setSelectedPneu(null);
+      setPage(1);
       fetchReformas();
     } catch (err) {
       toast('Erro ao salvar reforma: ' + err.message, 'error');
@@ -129,6 +129,7 @@ const Reformas = () => {
       if (pneuError) throw pneuError;
 
       toast('Reforma concluída!', 'success');
+      setPage(1);
       fetchReformas();
     } catch (err) {
       toast('Erro ao concluir reforma: ' + err.message, 'error');
