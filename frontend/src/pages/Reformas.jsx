@@ -76,11 +76,15 @@ const Reformas = () => {
       toast('Selecione um pneu válido da lista de sugestões.', 'error');
       return;
     }
+    setIsModalOpen(false);
     try {
       // 1. Register reform
       const payload = {
         ...formData,
+        valor: formData.valor ? Number(formData.valor) : null,
         numero_reforma: formData.numero_reforma ? Number(formData.numero_reforma) : null,
+        empresa: formData.empresa || null,
+        observacoes: formData.observacoes || null,
       };
       const { error: refError } = await supabase.from('reformas').insert([payload]);
       if (refError) throw refError;

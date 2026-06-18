@@ -56,12 +56,18 @@ const Veiculos = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsModalOpen(false);
     try {
-      const { error } = await supabase.from('veiculos').insert([formData]);
+      const payload = {
+        ...formData,
+        ano: formData.ano ? Number(formData.ano) : null,
+        frota: formData.frota || null,
+        centro_custo: formData.centro_custo || null,
+      };
+      const { error } = await supabase.from('veiculos').insert([payload]);
       if (error) throw error;
       
       toast('Veículo cadastrado com sucesso!', 'success');
-      setIsModalOpen(false);
       setFormData({ placa: '', frota: '', tipo: 'Cavalo + semirreboque', ano: '', centro_custo: '' });
       fetchVeiculos();
     } catch (err) {
@@ -70,15 +76,14 @@ const Veiculos = () => {
   };
 
   const handleDelete = async (id) => {
+    setDeleteTarget(null);
     try {
       const { error } = await supabase.from('veiculos').delete().eq('id', id);
       if (error) throw error;
       toast('Veículo excluído.', 'success');
-      setDeleteTarget(null);
       fetchVeiculos();
     } catch (err) {
       toast('Erro ao excluir veículo: ' + err.message, 'error');
-      setDeleteTarget(null);
     }
   };
 

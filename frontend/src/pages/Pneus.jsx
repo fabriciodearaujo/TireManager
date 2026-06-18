@@ -57,12 +57,19 @@ const Pneus = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsModalOpen(false);
     try {
-      const { error } = await supabase.from('pneus').insert([formData]);
+      const payload = {
+        ...formData,
+        data_compra: formData.data_compra || null,
+        valor_compra: formData.valor_compra ? Number(formData.valor_compra) : null,
+        modelo: formData.modelo || null,
+        dot: formData.dot || null,
+      };
+      const { error } = await supabase.from('pneus').insert([payload]);
       if (error) throw error;
       
       toast('Pneu cadastrado com sucesso!', 'success');
-      setIsModalOpen(false);
       setFormData({ serial_number: '', marca: '', modelo: '', medida: '', dot: '', data_compra: '', valor_compra: '', condicao: 'Pneu novo' });
       fetchPneus();
     } catch (err) {
@@ -71,15 +78,14 @@ const Pneus = () => {
   };
 
   const handleDelete = async (id) => {
+    setDeleteTarget(null);
     try {
       const { error } = await supabase.from('pneus').delete().eq('id', id);
       if (error) throw error;
       toast('Pneu excluído.', 'success');
-      setDeleteTarget(null);
       fetchPneus();
     } catch (err) {
       toast('Erro ao excluir pneu: ' + err.message, 'error');
-      setDeleteTarget(null);
     }
   };
 
