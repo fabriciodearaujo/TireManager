@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import { AlertCircle as AlertIcon, Clock as ClockIcon } from 'lucide-react';
 
@@ -8,6 +9,7 @@ const MOV_TYPE_LABELS = {
 };
 
 const Dashboard = () => {
+  const navigate = useNavigate();
   const [stats, setStats] = useState(null);
   const [recentMovs, setRecentMovs] = useState([]);
   const [loadingStats, setLoadingStats] = useState(true);
@@ -92,22 +94,22 @@ const Dashboard = () => {
   return (
     <div>
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <div className="stat-card border-brand-500">
+        <div className="stat-card border-brand-500 cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate('/pneus?status=estoque')}>
           <p className="text-xs text-gray-400 mb-1">Em estoque</p>
           <p className="text-2xl font-semibold text-brand-600">{stats.pneus.em_estoque}</p>
           <p className="text-xs text-gray-400 mt-1">prontos para uso</p>
         </div>
-        <div className="stat-card border-green-500">
+        <div className="stat-card border-green-500 cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate('/pneus?status=instalado')}>
           <p className="text-xs text-gray-400 mb-1">Instalados</p>
           <p className="text-2xl font-semibold text-green-600">{stats.pneus.instalados}</p>
           <p className="text-xs text-gray-400 mt-1">em operação</p>
         </div>
-        <div className="stat-card border-amber-500">
+        <div className="stat-card border-amber-500 cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate('/pneus?status=reforma')}>
           <p className="text-xs text-gray-400 mb-1">Em reforma</p>
           <p className="text-2xl font-semibold text-amber-600">{stats.pneus.em_reforma}</p>
           <p className="text-xs text-gray-400 mt-1">aguardando retorno</p>
         </div>
-        <div className="stat-card border-red-400">
+        <div className="stat-card border-red-400 cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate('/pneus?status=descartado')}>
           <p className="text-xs text-gray-400 mb-1">Descartados</p>
           <p className="text-2xl font-semibold text-red-500">{stats.pneus.descartados}</p>
           <p className="text-xs text-gray-400 mt-1">no acumulado</p>
