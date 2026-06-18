@@ -3,6 +3,7 @@ import { supabase } from '../supabaseClient';
 import { Plus, Search, X, Trash2 } from 'lucide-react';
 import { useToast } from '../components/Toast';
 import Pagination from '../components/Pagination';
+import ConfirmDialog from '../components/ConfirmDialog';
 
 const Veiculos = () => {
   const toast = useToast();
@@ -15,6 +16,7 @@ const Veiculos = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [page, setPage] = useState(1);
   const pageSize = 10;
+  const [deleteTarget, setDeleteTarget] = useState(null);
 
   useEffect(() => { setPage(1); }, [searchTerm]);
   const [formData, setFormData] = useState({
@@ -68,16 +70,15 @@ const Veiculos = () => {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Tem certeza que deseja excluir este veículo? Esta ação não pode ser desfeita.')) {
-      return;
-    }
     try {
       const { error } = await supabase.from('veiculos').delete().eq('id', id);
       if (error) throw error;
       toast('Veículo excluído.', 'success');
+      setDeleteTarget(null);
       fetchVeiculos();
     } catch (err) {
       toast('Erro ao excluir veículo: ' + err.message, 'error');
+      setDeleteTarget(null);
     }
   };
 
@@ -171,7 +172,7 @@ const Veiculos = () => {
                   <td className="px-5 py-3 text-gray-400">{v.centro_custo}</td>
                   <td className="px-5 py-3"><button onClick={() => handleViewPneus(v)} className="text-brand-500 hover:text-brand-600 text-xs underline">Ver pneus</button></td>
                   <td className="px-5 py-3">
-                    <button onClick={() => handleDelete(v.id)} className="text-red-400 hover:text-red-600 transition-colors" title="Excluir">
+                    <button onClick={() => setDeleteTarget(v.id)} className="text-red-400 hover:text-red-600 transition-colors" title="Excluir">
                       <Trash2 className="w-4 h-4" />
                     </button>
                   </td>
@@ -270,6 +271,14 @@ const Veiculos = () => {
           </div>
         </div>
       )}
+
+      <ConfirmDialog
+        open={!!deleteTarget}
+        title="Excluir veículo"
+        message="Tem certeza que deseja excluir este veículo? Esta ação não pode ser desfeita."
+        onConfirm={() => handleDelete(deleteTarget)}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </div>
   );
 };

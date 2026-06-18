@@ -5,6 +5,7 @@ import { Plus, Search, X, Trash2 } from 'lucide-react';
 import { useToast } from '../components/Toast';
 import Pagination from '../components/Pagination';
 import Tooltip from '../components/Tooltip';
+import ConfirmDialog from '../components/ConfirmDialog';
 
 const Pneus = () => {
   const navigate = useNavigate();
@@ -15,6 +16,7 @@ const Pneus = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [page, setPage] = useState(1);
   const pageSize = 10;
+  const [deleteTarget, setDeleteTarget] = useState(null);
 
   useEffect(() => { setPage(1); }, [searchTerm]);
   const [formData, setFormData] = useState({
@@ -69,16 +71,15 @@ const Pneus = () => {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Tem certeza que deseja excluir este pneu? Esta ação não pode ser desfeita.')) {
-      return;
-    }
     try {
       const { error } = await supabase.from('pneus').delete().eq('id', id);
       if (error) throw error;
       toast('Pneu excluído.', 'success');
+      setDeleteTarget(null);
       fetchPneus();
     } catch (err) {
       toast('Erro ao excluir pneu: ' + err.message, 'error');
+      setDeleteTarget(null);
     }
   };
 
@@ -152,7 +153,7 @@ const Pneus = () => {
                   <td className="px-5 py-3 text-gray-500">{p.qtd_reformas}×</td>
                   <td className="px-5 py-3 flex items-center gap-3">
                     <button onClick={() => navigate(`/historico?serial=${p.serial_number}`)} className="text-brand-500 hover:text-brand-600 text-xs underline">Histórico</button>
-                    <button onClick={() => handleDelete(p.id)} className="text-red-400 hover:text-red-600 transition-colors" title="Excluir">
+                    <button onClick={() => setDeleteTarget(p.id)} className="text-red-400 hover:text-red-600 transition-colors" title="Excluir">
                       <Trash2 className="w-4 h-4" />
                     </button>
                   </td>
@@ -229,6 +230,14 @@ const Pneus = () => {
           </div>
         </div>
       )}
+
+      <ConfirmDialog
+        open={!!deleteTarget}
+        title="Excluir pneu"
+        message="Tem certeza que deseja excluir este pneu? Esta ação não pode ser desfeita."
+        onConfirm={() => handleDelete(deleteTarget)}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </div>
   );
 };
