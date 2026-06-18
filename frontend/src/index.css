@@ -22,7 +22,53 @@
 body {
   font-family: var(--font-sans);
   background: var(--color-surface);
+  transition: background 0.3s, color 0.3s;
 }
+
+.dark body {
+  background: #111318;
+  color: #e0e0e0;
+}
+
+.dark .bg-white,
+.dark .bg-panel {
+  background: #1a1d23 !important;
+}
+
+.dark .border-gray-100,
+.dark .border-gray-200 {
+  border-color: #2a2d35 !important;
+}
+
+.dark .text-gray-700,
+.dark .text-gray-800 {
+  color: #e0e0e0 !important;
+}
+
+.dark .text-gray-400,
+.dark .text-gray-500,
+.dark .text-gray-600 {
+  color: #9ca3af !important;
+}
+
+.dark .bg-gray-50,
+.dark .bg-surface {
+  background: #16181d !important;
+}
+
+.dark .skeleton {
+  background: #2a2d35 !important;
+}
+
+.dark .shadow-sm {
+  box-shadow: 0 1px 2px rgba(0,0,0,0.3) !important;
+}
+
+.dark .badge-installed { @apply bg-green-900/40 text-green-300; }
+.dark .badge-stock     { @apply bg-blue-900/40 text-blue-300; }
+.dark .badge-reform    { @apply bg-amber-900/40 text-amber-300; }
+.dark .badge-discard   { @apply bg-red-900/40 text-red-300; }
+.dark .badge-new       { @apply bg-purple-900/40 text-purple-300; }
 
 .font-mono {
   font-family: var(--font-mono);

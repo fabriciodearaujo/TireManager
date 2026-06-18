@@ -10,7 +10,9 @@ import {
   FileText, 
   Menu, 
   X,
-  LogOut
+  LogOut,
+  Moon,
+  Sun
 } from 'lucide-react';
 import { supabase } from './supabaseClient';
 import ToastProvider from './components/Toast';
@@ -42,6 +44,12 @@ const ProtectedRoute = ({ children }) => {
 const MainLayout = ({ children }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [user, setUser] = useState(null);
+  const [darkMode, setDarkMode] = useState(() => localStorage.getItem('darkMode') === 'true');
+
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', darkMode);
+    localStorage.setItem('darkMode', darkMode);
+  }, [darkMode]);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -120,6 +128,9 @@ const MainLayout = ({ children }) => {
               <LogOut className="w-3 h-3" /> Sair
             </button>
           </div>
+          <button onClick={() => setDarkMode(!darkMode)} className="p-1.5 rounded-md hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors" title={darkMode ? 'Modo claro' : 'Modo escuro'}>
+            {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+          </button>
         </div>
         <div className="px-5 py-3 bg-gray-50 border-t border-gray-100 text-center">
           <p className="text-[10px] text-gray-400">Desenvolvido por: <a href="https://www.linkedin.com/in/fabriciopereiraaraujo/" target="_blank" rel="noopener noreferrer" className="text-gray-600 font-semibold hover:text-brand-500 transition-colors underline decoration-gray-300 underline-offset-2">Fabrício Araújo</a></p>
