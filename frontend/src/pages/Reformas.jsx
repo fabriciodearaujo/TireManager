@@ -105,7 +105,8 @@ const Reformas = () => {
       setPneuSearch('');
       setSelectedPneu(null);
       setPage(1);
-      if (refData) setReformas(prev => [{ ...refData[0], serial_number: refData[0].pneus?.serial_number }, ...prev]);
+      const { data: freshList } = await supabase.from('reformas').select('*, pneus(serial_number)').order('data_envio', { ascending: false });
+      if (freshList) setReformas(freshList.map(r => ({ ...r, serial_number: r.pneus?.serial_number })));
     } catch (err) {
       toast('Erro ao salvar reforma: ' + err.message, 'error');
     }

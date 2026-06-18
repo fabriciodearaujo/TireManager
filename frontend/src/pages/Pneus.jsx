@@ -72,7 +72,8 @@ const Pneus = () => {
       toast('Pneu cadastrado com sucesso!', 'success');
       setFormData({ serial_number: '', marca: '', modelo: '', medida: '', dot: '', data_compra: '', valor_compra: '', condicao: 'Pneu novo' });
       setPage(1);
-      if (data) setPneus(prev => [data[0], ...prev]);
+      const { data: freshList } = await supabase.from('pneus').select('*').order('created_at', { ascending: false });
+      if (freshList) setPneus(freshList);
     } catch (err) {
       toast('Erro ao salvar pneu: ' + err.message, 'error');
     }
@@ -85,7 +86,8 @@ const Pneus = () => {
       if (error) throw error;
       toast('Pneu excluído.', 'success');
       setPage(1);
-      setPneus(prev => prev.filter(p => p.id !== id));
+      const { data: freshList } = await supabase.from('pneus').select('*').order('created_at', { ascending: false });
+      if (freshList) setPneus(freshList);
     } catch (err) {
       toast('Erro ao excluir pneu: ' + err.message, 'error');
     }

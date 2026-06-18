@@ -70,7 +70,8 @@ const Veiculos = () => {
       toast('Veículo cadastrado com sucesso!', 'success');
       setFormData({ placa: '', frota: '', tipo: 'Cavalo + semirreboque', ano: '', centro_custo: '' });
       setPage(1);
-      if (data) setVeiculos(prev => [data[0], ...prev]);
+      const { data: freshList } = await supabase.from('veiculos').select('*').order('placa', { ascending: true });
+      if (freshList) setVeiculos(freshList);
     } catch (err) {
       toast('Erro ao salvar veículo: ' + err.message, 'error');
     }
@@ -83,7 +84,8 @@ const Veiculos = () => {
       if (error) throw error;
       toast('Veículo excluído.', 'success');
       setPage(1);
-      setVeiculos(prev => prev.filter(v => v.id !== id));
+      const { data: freshList } = await supabase.from('veiculos').select('*').order('placa', { ascending: true });
+      if (freshList) setVeiculos(freshList);
     } catch (err) {
       toast('Erro ao excluir veículo: ' + err.message, 'error');
     }
