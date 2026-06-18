@@ -2,11 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 import { Search, Loader2 } from 'lucide-react';
 
-const MOV_TYPE_LABELS = {
-  instalacao: 'Instalação',
-  remocao: 'Remoção',
-};
-
 const Historico = () => {
 
   const [searchTerm, setSearchTerm] = useState('');

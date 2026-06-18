@@ -5,6 +5,7 @@ import { Plus, Search, X, Trash2 } from 'lucide-react';
 const Pneus = () => {
   const [pneus, setPneus] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
   const [formData, setFormData] = useState({
     serial_number: '', marca: '', modelo: '', medida: '', dot: '', data_compra: '', valor_compra: '', condicao: 'Pneu novo'
   });
@@ -12,6 +13,16 @@ const Pneus = () => {
   useEffect(() => {
     fetchPneus();
   }, []);
+
+  const filteredPneus = pneus.filter(p => {
+    if (!searchTerm) return true;
+    const term = searchTerm.toLowerCase();
+    return (
+      p.serial_number.toLowerCase().includes(term) ||
+      p.marca.toLowerCase().includes(term) ||
+      p.medida.toLowerCase().includes(term)
+    );
+  });
 
   const fetchPneus = async () => {
     try {
@@ -68,7 +79,7 @@ const Pneus = () => {
 
       <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-3 py-2 mb-4">
         <Search className="w-4 h-4 text-gray-400 shrink-0" />
-        <input type="text" placeholder="Buscar por série, marca ou medida…" className="flex-1 text-sm outline-none bg-transparent text-gray-700 placeholder-gray-400" />
+        <input type="text" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder="Buscar por série, marca ou medida…" className="flex-1 text-sm outline-none bg-transparent text-gray-700 placeholder-gray-400" />
       </div>
 
       <div className="bg-white rounded-xl shadow-sm overflow-hidden">
@@ -86,7 +97,7 @@ const Pneus = () => {
               </tr>
             </thead>
             <tbody>
-              {pneus.map(p => (
+              {filteredPneus.map(p => (
                 <tr key={p.id} className="border-b border-gray-50">
                   <td className="px-5 py-3 font-mono text-xs">{p.serial_number}</td>
                   <td className="px-5 py-3 font-medium text-gray-700">{p.marca}</td>

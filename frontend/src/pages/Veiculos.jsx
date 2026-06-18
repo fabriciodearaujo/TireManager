@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../supabaseClient';
-import { Plus, Search, X } from 'lucide-react';
+import { Plus, Search, X, Trash2 } from 'lucide-react';
 
 const Veiculos = () => {
   const [veiculos, setVeiculos] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
   const [formData, setFormData] = useState({
     placa: '', frota: '', tipo: 'Cavalo + semirreboque', ano: '', centro_custo: ''
   });
@@ -12,6 +13,15 @@ const Veiculos = () => {
   useEffect(() => {
     fetchVeiculos();
   }, []);
+
+  const filteredVeiculos = veiculos.filter(v => {
+    if (!searchTerm) return true;
+    const term = searchTerm.toLowerCase();
+    return (
+      v.placa.toLowerCase().includes(term) ||
+      (v.frota && v.frota.toLowerCase().includes(term))
+    );
+  });
 
   const fetchVeiculos = async () => {
     try {
@@ -41,6 +51,19 @@ const Veiculos = () => {
     }
   };
 
+  const handleDelete = async (id) => {
+    if (!window.confirm('Tem certeza que deseja excluir este veículo? Esta ação não pode ser desfeita.')) {
+      return;
+    }
+    try {
+      const { error } = await supabase.from('veiculos').delete().eq('id', id);
+      if (error) throw error;
+      fetchVeiculos();
+    } catch (err) {
+      alert('Erro ao excluir veículo: ' + err.message);
+    }
+  };
+
   return (
     <div>
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
@@ -55,7 +78,7 @@ const Veiculos = () => {
 
       <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-3 py-2 mb-4">
         <Search className="w-4 h-4 text-gray-400 shrink-0" />
-        <input type="text" placeholder="Buscar por placa ou frota…" className="flex-1 text-sm outline-none bg-transparent text-gray-700 placeholder-gray-400" />
+        <input type="text" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder="Buscar por placa ou frota…" className="flex-1 text-sm outline-none bg-transparent text-gray-700 placeholder-gray-400" />
       </div>
 
       <div className="bg-white rounded-xl shadow-sm overflow-hidden">
@@ -69,10 +92,11 @@ const Veiculos = () => {
                 <th className="text-left px-5 py-3 text-xs font-medium text-gray-400 uppercase tracking-wide">Ano</th>
                 <th className="text-left px-5 py-3 text-xs font-medium text-gray-400 uppercase tracking-wide">Centro de custo</th>
                 <th className="px-5 py-3"></th>
+                <th className="px-5 py-3"></th>
               </tr>
             </thead>
             <tbody>
-              {veiculos.map(v => (
+              {filteredVeiculos.map(v => (
                 <tr key={v.id} className="border-b border-gray-50">
                   <td className="px-5 py-3 font-semibold tracking-wide uppercase">{v.placa}</td>
                   <td className="px-5 py-3 text-gray-500">{v.frota}</td>
@@ -80,6 +104,11 @@ const Veiculos = () => {
                   <td className="px-5 py-3 text-gray-400">{v.ano}</td>
                   <td className="px-5 py-3 text-gray-400">{v.centro_custo}</td>
                   <td className="px-5 py-3"><button className="text-brand-500 hover:text-brand-600 text-xs underline">Ver pneus</button></td>
+                  <td className="px-5 py-3">
+                    <button onClick={() => handleDelete(v.id)} className="text-red-400 hover:text-red-600 transition-colors" title="Excluir">
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>

@@ -67,11 +67,15 @@ const Reformas = () => {
     }
     try {
       // 1. Register reform
-      const { error: refError } = await supabase.from('reformas').insert([formData]);
+      const payload = {
+        ...formData,
+        numero_reforma: formData.numero_reforma ? Number(formData.numero_reforma) : null,
+      };
+      const { error: refError } = await supabase.from('reformas').insert([payload]);
       if (refError) throw refError;
 
       // 2. Update pneu status and count
-      const { data: pneu } = await supabase.from('pneus').select('qtd_reformas').eq('id', formData.pneu_id).single();
+      const { data: pneu } = await supabase.from('pneus').select('qtd_reformas, condicao').eq('id', formData.pneu_id).single();
       const { error: pneuError } = await supabase
         .from('pneus')
         .update({ 
@@ -96,6 +100,11 @@ const Reformas = () => {
     try {
       const { data: reform, error: refError } = await supabase.from('reformas').select('pneu_id').eq('id', id).single();
       if (refError || !reform) throw refError;
+
+      // Verify tire is actually in reforma status before completing
+      const { data: pneuCheck, error: checkError } = await supabase.from('pneus').select('status, condicao').eq('id', reform.pneu_id).single();
+      if (checkError || !pneuCheck) throw new Error('Pneu não encontrado');
+      if (pneuCheck.status !== 'reforma') throw new Error('Este pneu não está em reforma');
 
       const { error: pneuError } = await supabase
         .from('pneus')
@@ -221,6 +230,10 @@ const Reformas = () => {
               <div className="flex flex-col gap-1.5">
                 <label className="text-xs text-gray-500">Retorno previsto</label>
                 <input type="date" value={formData.data_retorno} onChange={e => setFormData({...formData, data_retorno: e.target.value})} className="border border-gray-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-brand-400" />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs text-gray-500">Nº da reforma</label>
+                <input type="number" value={formData.numero_reforma} onChange={e => setFormData({...formData, numero_reforma: e.target.value})} className="border border-gray-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-brand-400" />
               </div>
               <div className="flex flex-col gap-1.5 sm:col-span-2">
                 <label className="text-xs text-gray-500">Observações</label>

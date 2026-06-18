@@ -8,8 +8,6 @@ const MOV_TYPE_LABELS = {
 };
 
 const Dashboard = () => {
-// ... existing code ...
-
   const [stats, setStats] = useState(null);
   const [recentMovs, setRecentMovs] = useState([]);
   const [loadingStats, setLoadingStats] = useState(true);
