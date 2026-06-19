@@ -16,6 +16,7 @@ const Reformas = () => {
     pneu_id: '', empresa: '', valor: '', data_envio: '', data_retorno: '', numero_reforma: '', observacoes: ''
   });
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const [completeTarget, setCompleteTarget] = useState(null);
 
   // Tire Search (Reform)
   const [pneuSearch, setPneuSearch] = useState('');
@@ -204,7 +205,7 @@ const Reformas = () => {
                   <td className="px-5 py-3 text-gray-400">{r.data_envio}</td>
                   <td className="px-5 py-3 font-medium">R$ {r.valor}</td>
                   <td className="px-5 py-3 flex items-center gap-3">
-                    <button onClick={() => handleComplete(r.id)} className="text-green-600 hover:text-green-700 text-xs underline">Concluir</button>
+                    <button onClick={() => setCompleteTarget(r.id)} className="text-green-600 hover:text-green-700 text-xs underline">Concluir</button>
                     <button onClick={() => setDeleteTarget(r.id)} className="text-red-400 hover:text-red-600 transition-colors" title="Excluir">
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -225,6 +226,16 @@ const Reformas = () => {
         message="Tem certeza que deseja excluir esta reforma? Esta ação não pode ser desfeita."
         onConfirm={() => handleDelete(deleteTarget)}
         onCancel={() => setDeleteTarget(null)}
+      />
+
+      <ConfirmDialog
+        open={!!completeTarget}
+        title="Concluir reforma"
+        message="Confirma que esta reforma foi concluída? O pneu será marcado como 'Reformado' e voltará ao estoque."
+        onConfirm={() => handleComplete(completeTarget)}
+        onCancel={() => setCompleteTarget(null)}
+        confirmText="Concluir"
+        variant="success"
       />
 
       {isModalOpen && (
