@@ -90,20 +90,10 @@ const Reformas = () => {
         observacoes: formData.observacoes || null,
         condicao_antes: pneuAtual?.condicao || null,
       };
-      const { data: refData, error: refError } = await supabase.from('reformas').insert([payload]).select('*, pneus(serial_number)');
+      const { error: refError } = await supabase.from('reformas').insert([payload]);
       if (refError) throw refError;
 
-      // 2. Update pneu status and count
-      const { data: pneu } = await supabase.from('pneus').select('qtd_reformas, condicao').eq('id', formData.pneu_id).single();
-      const { error: pneuError } = await supabase
-        .from('pneus')
-        .update({ 
-          status: 'reforma'
-        })
-        .eq('id', formData.pneu_id);
-      
-      if (pneuError) throw pneuError;
-
+      toast('Reforma registrada!', 'success');
       setFormData({ pneu_id: '', empresa: '', valor: '', data_envio: '', data_retorno: '', numero_reforma: '', observacoes: '' });
       setPneuSearch('');
       setSelectedPneu(null);
@@ -120,14 +110,12 @@ const Reformas = () => {
       const { data: reform, error: refError } = await supabase.from('reformas').select('pneu_id').eq('id', id).single();
       if (refError || !reform) throw refError;
 
-      // Verify tire is actually in reforma status before completing
-      const { data: pneuCheck, error: checkError } = await supabase.from('pneus').select('status, condicao, qtd_reformas').eq('id', reform.pneu_id).single();
+      const { data: pneuCheck, error: checkError } = await supabase.from('pneus').select('qtd_reformas').eq('id', reform.pneu_id).single();
       if (checkError || !pneuCheck) throw new Error('Pneu não encontrado');
-      if (pneuCheck.status !== 'reforma') throw new Error('Este pneu não está em reforma');
 
       const { error: pneuError } = await supabase
         .from('pneus')
-        .update({ status: 'estoque', condicao: 'Reformado', qtd_reformas: (pneuCheck.qtd_reformas || 0) + 1 })
+        .update({ condicao: 'Reformado', qtd_reformas: (pneuCheck.qtd_reformas || 0) + 1 })
         .eq('id', reform.pneu_id);
       
       if (pneuError) throw pneuError;
@@ -145,15 +133,12 @@ const Reformas = () => {
     try {
       const { data: reform } = await supabase.from('reformas').select('pneu_id, condicao_antes').eq('id', id).single();
       if (reform) {
-        const { data: pneu } = await supabase.from('pneus').select('status, qtd_reformas').eq('id', reform.pneu_id).single();
-        const update = {};
-        if (pneu && pneu.status === 'reforma') {
-          update.status = 'estoque';
-          update.qtd_reformas = Math.max(0, (pneu.qtd_reformas || 0) - 1);
-          if (reform.condicao_antes) update.condicao = reform.condicao_antes;
-        }
-        if (Object.keys(update).length > 0) {
-          await supabase.from('pneus').update(update).eq('id', reform.pneu_id);
+        const { data: pneu } = await supabase.from('pneus').select('condicao, qtd_reformas').eq('id', reform.pneu_id).single();
+        if (pneu && pneu.condicao === 'Reformado' && reform.condicao_antes) {
+          await supabase.from('pneus').update({
+            condicao: reform.condicao_antes,
+            qtd_reformas: Math.max(0, (pneu.qtd_reformas || 0) - 1),
+          }).eq('id', reform.pneu_id);
         }
       }
       const { error } = await supabase.from('reformas').delete().eq('id', id);

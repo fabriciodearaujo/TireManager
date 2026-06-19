@@ -91,7 +91,11 @@ const Pneus = () => {
       };
 
       if (editingId) {
-        const { error } = await supabase.from('pneus').update(payload).eq('id', editingId);
+        const updatePayload = { ...payload };
+        if (updatePayload.condicao === 'Pneu novo' || updatePayload.condicao === 'Novo Usado') {
+          updatePayload.qtd_reformas = 0;
+        }
+        const { error } = await supabase.from('pneus').update(updatePayload).eq('id', editingId);
         if (error) throw error;
         toast('Pneu atualizado com sucesso!', 'success');
       } else {
