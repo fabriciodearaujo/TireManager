@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { supabase } from '../supabaseClient';
 import { Package, Wrench, RefreshCw, Trash2, AlertCircle as AlertIcon, Clock as ClockIcon } from 'lucide-react';
 import { PieChart, Pie, Cell, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from 'recharts';
+import { PieChart as PieChartIcon, BarChart3 } from 'lucide-react';
 import CountUp from '../components/CountUp';
 
 const MOV_TYPE_LABELS = {
@@ -25,6 +26,7 @@ const Dashboard = () => {
   const [loadingStats, setLoadingStats] = useState(true);
   const [loadingMovs, setLoadingMovs] = useState(true);
   const [error, setError] = useState(null);
+  const [chartType, setChartType] = useState('pie');
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -163,20 +165,48 @@ const Dashboard = () => {
         </div>
 
         <div className="bg-white rounded-xl shadow-sm p-5">
-          <p className="text-sm font-medium text-gray-700 mb-4">Distribuição dos pneus</p>
-          {pieData.length > 0 ? (
-            <div className="flex items-center justify-center gap-4">
-              <ResponsiveContainer width={180} height={180}>
-                <PieChart>
-                  <Pie data={pieData} cx="50%" cy="50%" outerRadius={80} dataKey="value" label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
-                    {pieData.map((_, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
+          <div className="flex items-center justify-between mb-4">
+            <p className="text-sm font-medium text-gray-700">Distribuição dos pneus</p>
+            <div className="flex bg-gray-100 rounded-lg p-0.5">
+              <button onClick={() => setChartType('pie')} className={`flex items-center gap-1 px-2.5 py-1.5 text-xs rounded-md transition-colors ${chartType === 'pie' ? 'bg-white shadow-sm text-gray-800 font-medium' : 'text-gray-400 hover:text-gray-600'}`}>
+                <PieChartIcon className="w-3.5 h-3.5" /> Pizza
+              </button>
+              <button onClick={() => setChartType('column')} className={`flex items-center gap-1 px-2.5 py-1.5 text-xs rounded-md transition-colors ${chartType === 'column' ? 'bg-white shadow-sm text-gray-800 font-medium' : 'text-gray-400 hover:text-gray-600'}`}>
+                <BarChart3 className="w-3.5 h-3.5" /> Colunas
+              </button>
             </div>
+          </div>
+          {pieData.length > 0 ? (
+            chartType === 'pie' ? (
+              <div className="flex items-center justify-center gap-4">
+                <ResponsiveContainer width={180} height={180}>
+                  <PieChart>
+                    <Pie data={pieData} cx="50%" cy="50%" outerRadius={80} dataKey="value" label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
+                      {pieData.map((_, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            ) : (
+              <div className="flex items-center justify-center">
+                <ResponsiveContainer width={260} height={200}>
+                  <BarChart data={pieData} layout="vertical">
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                    <XAxis type="number" tick={{ fontSize: 11 }} />
+                    <YAxis type="category" dataKey="name" width={80} tick={{ fontSize: 11 }} />
+                    <Tooltip />
+                    <Bar dataKey="value" radius={[0, 4, 4, 0]}>
+                      {pieData.map((_, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            )
           ) : (
             <div className="flex items-center justify-center h-[180px] text-gray-400 text-sm">Nenhum pneu cadastrado</div>
           )}
