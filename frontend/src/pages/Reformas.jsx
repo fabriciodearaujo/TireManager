@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../supabaseClient';
-import { Plus, X, Trash2 } from 'lucide-react';
+import { Plus, X, Trash2, Search, Loader2 } from 'lucide-react';
 import { useToast } from '../components/Toast';
 import Pagination from '../components/Pagination';
 import ConfirmDialog from '../components/ConfirmDialog';
