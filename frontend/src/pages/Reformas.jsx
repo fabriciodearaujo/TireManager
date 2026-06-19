@@ -220,7 +220,7 @@ const Reformas = () => {
       </div>
 
       <ConfirmDialog
-        isOpen={!!deleteTarget}
+        open={!!deleteTarget}
         title="Excluir reforma"
         message="Tem certeza que deseja excluir esta reforma? Esta ação não pode ser desfeita."
         onConfirm={() => handleDelete(deleteTarget)}
