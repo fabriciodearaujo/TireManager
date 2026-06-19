@@ -81,6 +81,7 @@ const Pneus = () => {
   };
 
   const handleDelete = async (id) => {
+    console.log('DELETE', id, 'pneus before:', pneus.length);
     setDeleteTarget(null);
     try {
       const { error } = await supabase.from('pneus').delete().eq('id', id);
@@ -88,9 +89,11 @@ const Pneus = () => {
       toast('Pneu excluído.', 'success');
       setPage(1);
       const { data: freshList } = await supabase.from('pneus').select('*').order('created_at', { ascending: false });
-      if (freshList) { setPneus(freshList); setRefreshKey(k => k + 1); }
+      console.log('freshList:', freshList?.length);
+      if (freshList) { setPneus(freshList); setRefreshKey(k => { console.log('refreshKey inc'); return k + 1; }); }
     } catch (err) {
       toast('Erro ao excluir pneu: ' + err.message, 'error');
+      console.error('Delete error:', err);
     }
   };
 
