@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../supabaseClient';
-import { Plus, X, Search, Loader2 } from 'lucide-react';
+import { Plus, X, Trash2 } from 'lucide-react';
 import { useToast } from '../components/Toast';
 import Pagination from '../components/Pagination';
+import ConfirmDialog from '../components/ConfirmDialog';
 
 const Reformas = () => {
   const toast = useToast();
@@ -14,6 +15,7 @@ const Reformas = () => {
   const [formData, setFormData] = useState({
     pneu_id: '', empresa: '', valor: '', data_envio: '', data_retorno: '', numero_reforma: '', observacoes: ''
   });
+  const [deleteTarget, setDeleteTarget] = useState(null);
 
   // Tire Search (Reform)
   const [pneuSearch, setPneuSearch] = useState('');
@@ -137,6 +139,26 @@ const Reformas = () => {
     }
   };
 
+  const handleDelete = async (id) => {
+    setDeleteTarget(null);
+    try {
+      const { data: reform } = await supabase.from('reformas').select('pneu_id').eq('id', id).single();
+      if (reform) {
+        const { data: pneu } = await supabase.from('pneus').select('status, qtd_reformas').eq('id', reform.pneu_id).single();
+        if (pneu && pneu.status === 'reforma') {
+          await supabase.from('pneus').update({ status: 'estoque', qtd_reformas: Math.max(0, (pneu.qtd_reformas || 0) - 1) }).eq('id', reform.pneu_id);
+        }
+      }
+      const { error } = await supabase.from('reformas').delete().eq('id', id);
+      if (error) throw error;
+      toast('Reforma excluída.', 'success');
+      setPage(1);
+      fetchReformas();
+    } catch (err) {
+      toast('Erro ao excluir reforma: ' + err.message, 'error');
+    }
+  };
+
   return (
     <div>
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
@@ -181,8 +203,11 @@ const Reformas = () => {
                   <td className="px-5 py-3 text-gray-500">{r.empresa}</td>
                   <td className="px-5 py-3 text-gray-400">{r.data_envio}</td>
                   <td className="px-5 py-3 font-medium">R$ {r.valor}</td>
-                  <td className="px-5 py-3">
+                  <td className="px-5 py-3 flex items-center gap-3">
                     <button onClick={() => handleComplete(r.id)} className="text-green-600 hover:text-green-700 text-xs underline">Concluir</button>
+                    <button onClick={() => setDeleteTarget(r.id)} className="text-red-400 hover:text-red-600 transition-colors" title="Excluir">
+                      <Trash2 className="w-4 h-4" />
+                    </button>
                   </td>
                 </tr>
               )) : (
@@ -193,6 +218,14 @@ const Reformas = () => {
         </div>
         <Pagination current={page} total={reformas.length} pageSize={pageSize} onChange={p => setPage(p)} />
       </div>
+
+      <ConfirmDialog
+        isOpen={!!deleteTarget}
+        title="Excluir reforma"
+        message="Tem certeza que deseja excluir esta reforma? Esta ação não pode ser desfeita."
+        onConfirm={() => handleDelete(deleteTarget)}
+        onCancel={() => setDeleteTarget(null)}
+      />
 
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 modal-overlay">
