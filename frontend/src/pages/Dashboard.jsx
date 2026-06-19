@@ -179,16 +179,25 @@ const Dashboard = () => {
           {pieData.length > 0 ? (
             chartType === 'pie' ? (
               <div className="flex items-center justify-center gap-4">
-                <ResponsiveContainer width={180} height={180}>
+                <ResponsiveContainer width={220} height={220}>
                   <PieChart>
-                    <Pie data={pieData} cx="50%" cy="50%" outerRadius={80} dataKey="value" label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
+                    <Pie data={pieData} cx="50%" cy="50%" outerRadius={80} dataKey="value" label={({ name, percent }) => `${(percent * 100).toFixed(0)}%`} labelLine={false}>
                       {pieData.map((_, index) => (
                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                       ))}
                     </Pie>
-                    <Tooltip />
+                    <Tooltip formatter={(value, name) => [value, name]} />
                   </PieChart>
                 </ResponsiveContainer>
+                <div className="flex flex-col gap-1.5 text-xs">
+                  {pieData.map((d, i) => (
+                    <div key={d.name} className="flex items-center gap-2">
+                      <span className="w-3 h-3 rounded-sm inline-block" style={{ backgroundColor: COLORS[i % COLORS.length] }}></span>
+                      <span className="text-gray-600">{d.name}</span>
+                      <span className="text-gray-800 font-medium">{d.value}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
             ) : (
               <div className="flex items-center justify-center">
