@@ -115,7 +115,7 @@ const Reformas = () => {
 
       const { error: pneuError } = await supabase
         .from('pneus')
-        .update({ condicao: 'Reformado', qtd_reformas: (pneuCheck.qtd_reformas || 0) + 1 })
+        .update({ status: 'estoque', condicao: 'Reformado', qtd_reformas: (pneuCheck.qtd_reformas || 0) + 1 })
         .eq('id', reform.pneu_id);
       
       if (pneuError) throw pneuError;
