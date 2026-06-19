@@ -17,6 +17,7 @@ const Pneus = () => {
   const [page, setPage] = useState(1);
   const pageSize = 10;
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => { setPage(1); }, [searchTerm]);
   const [formData, setFormData] = useState({
@@ -73,7 +74,7 @@ const Pneus = () => {
       setFormData({ serial_number: '', marca: '', modelo: '', medida: '', dot: '', data_compra: '', valor_compra: '', condicao: 'Pneu novo' });
       setPage(1);
       const { data: freshList } = await supabase.from('pneus').select('*').order('created_at', { ascending: false });
-      if (freshList) setPneus(freshList);
+      if (freshList) { setPneus(freshList); setRefreshKey(k => k + 1); }
     } catch (err) {
       toast('Erro ao salvar pneu: ' + err.message, 'error');
     }
@@ -87,7 +88,7 @@ const Pneus = () => {
       toast('Pneu excluído.', 'success');
       setPage(1);
       const { data: freshList } = await supabase.from('pneus').select('*').order('created_at', { ascending: false });
-      if (freshList) setPneus(freshList);
+      if (freshList) { setPneus(freshList); setRefreshKey(k => k + 1); }
     } catch (err) {
       toast('Erro ao excluir pneu: ' + err.message, 'error');
     }
@@ -110,7 +111,7 @@ const Pneus = () => {
         <input type="text" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder="Buscar por série, marca ou medida…" className="flex-1 text-sm outline-none bg-transparent text-gray-700 placeholder-gray-400" />
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+      <div className="bg-white rounded-xl shadow-sm overflow-hidden" key={refreshKey}>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>

@@ -17,6 +17,7 @@ const Veiculos = () => {
   const [page, setPage] = useState(1);
   const pageSize = 10;
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => { setPage(1); }, [searchTerm]);
   const [formData, setFormData] = useState({
@@ -71,7 +72,7 @@ const Veiculos = () => {
       setFormData({ placa: '', frota: '', tipo: 'Cavalo + semirreboque', ano: '', centro_custo: '' });
       setPage(1);
       const { data: freshList } = await supabase.from('veiculos').select('*').order('placa', { ascending: true });
-      if (freshList) setVeiculos(freshList);
+      if (freshList) { setVeiculos(freshList); setRefreshKey(k => k + 1); }
     } catch (err) {
       toast('Erro ao salvar veículo: ' + err.message, 'error');
     }
@@ -85,7 +86,7 @@ const Veiculos = () => {
       toast('Veículo excluído.', 'success');
       setPage(1);
       const { data: freshList } = await supabase.from('veiculos').select('*').order('placa', { ascending: true });
-      if (freshList) setVeiculos(freshList);
+      if (freshList) { setVeiculos(freshList); setRefreshKey(k => k + 1); }
     } catch (err) {
       toast('Erro ao excluir veículo: ' + err.message, 'error');
     }
@@ -145,7 +146,7 @@ const Veiculos = () => {
         <input type="text" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder="Buscar por placa ou frota…" className="flex-1 text-sm outline-none bg-transparent text-gray-700 placeholder-gray-400" />
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+      <div className="bg-white rounded-xl shadow-sm overflow-hidden" key={refreshKey}>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
