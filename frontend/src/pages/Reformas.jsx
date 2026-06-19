@@ -80,13 +80,15 @@ const Reformas = () => {
     }
     setIsModalOpen(false);
     try {
-      // 1. Register reform
+      const { data: pneuAtual } = await supabase.from('pneus').select('condicao').eq('id', formData.pneu_id).single();
+
       const payload = {
         ...formData,
         valor: formData.valor ? Number(formData.valor) : null,
         numero_reforma: formData.numero_reforma ? Number(formData.numero_reforma) : null,
         empresa: formData.empresa || null,
         observacoes: formData.observacoes || null,
+        condicao_antes: pneuAtual?.condicao || null,
       };
       const { data: refData, error: refError } = await supabase.from('reformas').insert([payload]).select('*, pneus(serial_number)');
       if (refError) throw refError;
@@ -96,8 +98,7 @@ const Reformas = () => {
       const { error: pneuError } = await supabase
         .from('pneus')
         .update({ 
-          status: 'reforma', 
-          qtd_reformas: (pneu?.qtd_reformas || 0) + 1 
+          status: 'reforma'
         })
         .eq('id', formData.pneu_id);
       
@@ -120,13 +121,13 @@ const Reformas = () => {
       if (refError || !reform) throw refError;
 
       // Verify tire is actually in reforma status before completing
-      const { data: pneuCheck, error: checkError } = await supabase.from('pneus').select('status, condicao').eq('id', reform.pneu_id).single();
+      const { data: pneuCheck, error: checkError } = await supabase.from('pneus').select('status, condicao, qtd_reformas').eq('id', reform.pneu_id).single();
       if (checkError || !pneuCheck) throw new Error('Pneu não encontrado');
       if (pneuCheck.status !== 'reforma') throw new Error('Este pneu não está em reforma');
 
       const { error: pneuError } = await supabase
         .from('pneus')
-        .update({ status: 'estoque', condicao: 'Reformado' })
+        .update({ status: 'estoque', condicao: 'Reformado', qtd_reformas: (pneuCheck.qtd_reformas || 0) + 1 })
         .eq('id', reform.pneu_id);
       
       if (pneuError) throw pneuError;
@@ -142,11 +143,17 @@ const Reformas = () => {
   const handleDelete = async (id) => {
     setDeleteTarget(null);
     try {
-      const { data: reform } = await supabase.from('reformas').select('pneu_id').eq('id', id).single();
+      const { data: reform } = await supabase.from('reformas').select('pneu_id, condicao_antes').eq('id', id).single();
       if (reform) {
         const { data: pneu } = await supabase.from('pneus').select('status, qtd_reformas').eq('id', reform.pneu_id).single();
+        const update = {};
         if (pneu && pneu.status === 'reforma') {
-          await supabase.from('pneus').update({ status: 'estoque', qtd_reformas: Math.max(0, (pneu.qtd_reformas || 0) - 1) }).eq('id', reform.pneu_id);
+          update.status = 'estoque';
+          update.qtd_reformas = Math.max(0, (pneu.qtd_reformas || 0) - 1);
+          if (reform.condicao_antes) update.condicao = reform.condicao_antes;
+        }
+        if (Object.keys(update).length > 0) {
+          await supabase.from('pneus').update(update).eq('id', reform.pneu_id);
         }
       }
       const { error } = await supabase.from('reformas').delete().eq('id', id);

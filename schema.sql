@@ -56,6 +56,7 @@ CREATE TABLE reformas (
     data_retorno DATE,
     numero_reforma INTEGER,
     observacoes TEXT,
+    condicao_antes VARCHAR(30),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
