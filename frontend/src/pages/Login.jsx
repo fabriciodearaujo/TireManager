@@ -39,20 +39,6 @@ const Login = () => {
           </div>
           <h1 className="text-4xl font-bold text-white mb-3">TireManager</h1>
           <p className="text-brand-200 text-lg leading-relaxed">Sistema inteligente de gestão de pneus para frotas. Controle, monitore e otimize.</p>
-          <div className="mt-10 grid grid-cols-3 gap-4 text-left">
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/10">
-              <p className="text-2xl font-bold text-white">1K+</p>
-              <p className="text-xs text-brand-200 mt-1">Pneus gerenciados</p>
-            </div>
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/10">
-              <p className="text-2xl font-bold text-white">300+</p>
-              <p className="text-xs text-brand-200 mt-1">Veículos</p>
-            </div>
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/10">
-              <p className="text-2xl font-bold text-white">99%</p>
-              <p className="text-xs text-brand-200 mt-1">Uptime</p>
-            </div>
-          </div>
         </div>
       </div>
 
