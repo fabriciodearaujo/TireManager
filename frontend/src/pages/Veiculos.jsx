@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../supabaseClient';
-import { Plus, Search, X, Trash2 } from 'lucide-react';
+import { Plus, Search, X, Trash2, Pencil } from 'lucide-react';
 import { useToast } from '../components/Toast';
 import Pagination from '../components/Pagination';
 import ConfirmDialog from '../components/ConfirmDialog';
@@ -17,6 +17,7 @@ const Veiculos = () => {
   const [page, setPage] = useState(1);
   const pageSize = 10;
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const [editingId, setEditingId] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => { setPage(1); }, [searchTerm]);
@@ -37,6 +38,24 @@ const Veiculos = () => {
     );
   });
   const paginatedVeiculos = filteredVeiculos.slice((page - 1) * pageSize, page * pageSize);
+
+  const openEdit = (veiculo) => {
+    setFormData({
+      placa: veiculo.placa,
+      frota: veiculo.frota || '',
+      tipo: veiculo.tipo || 'Cavalo + semirreboque',
+      ano: veiculo.ano || '',
+      centro_custo: veiculo.centro_custo || '',
+    });
+    setEditingId(veiculo.id);
+    setIsModalOpen(true);
+  };
+
+  const openCreate = () => {
+    setFormData({ placa: '', frota: '', tipo: 'Cavalo + semirreboque', ano: '', centro_custo: '' });
+    setEditingId(null);
+    setIsModalOpen(true);
+  };
 
   const fetchVeiculos = async () => {
     setLoading(true);
@@ -65,10 +84,18 @@ const Veiculos = () => {
         frota: formData.frota || null,
         centro_custo: formData.centro_custo || null,
       };
-      const { data, error } = await supabase.from('veiculos').insert([payload]).select();
-      if (error) throw error;
-      
-      toast('Veículo cadastrado com sucesso!', 'success');
+
+      if (editingId) {
+        const { error } = await supabase.from('veiculos').update(payload).eq('id', editingId);
+        if (error) throw error;
+        toast('Veículo atualizado com sucesso!', 'success');
+      } else {
+        const { data, error } = await supabase.from('veiculos').insert([payload]).select();
+        if (error) throw error;
+        toast('Veículo cadastrado com sucesso!', 'success');
+      }
+
+      setEditingId(null);
       setFormData({ placa: '', frota: '', tipo: 'Cavalo + semirreboque', ano: '', centro_custo: '' });
       setPage(1);
       const { data: freshList } = await supabase.from('veiculos').select('*').order('placa', { ascending: true });
@@ -136,7 +163,7 @@ const Veiculos = () => {
           <h2 className="text-base font-semibold text-gray-800">Cadastro de Veículos</h2>
           <p className="text-xs text-gray-400 mt-0.5">{veiculos.length} veículos cadastrados</p>
         </div>
-        <button onClick={() => setIsModalOpen(true)} className="inline-flex items-center gap-2 bg-brand-500 hover:bg-brand-600 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors">
+        <button onClick={openCreate} className="inline-flex items-center gap-2 bg-brand-500 hover:bg-brand-600 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors">
           <Plus className="w-4 h-4" /> Novo veículo
         </button>
       </div>
@@ -181,7 +208,10 @@ const Veiculos = () => {
                   <td className="px-5 py-3 text-gray-400">{v.ano}</td>
                   <td className="px-5 py-3 text-gray-400">{v.centro_custo}</td>
                   <td className="px-5 py-3"><button onClick={() => handleViewPneus(v)} className="text-brand-500 hover:text-brand-600 text-xs underline">Ver pneus</button></td>
-                  <td className="px-5 py-3">
+                  <td className="px-5 py-3 flex items-center gap-3">
+                    <button onClick={() => openEdit(v)} className="text-gray-400 hover:text-brand-600 transition-colors" title="Editar">
+                      <Pencil className="w-4 h-4" />
+                    </button>
                     <button onClick={() => setDeleteTarget(v.id)} className="text-red-400 hover:text-red-600 transition-colors" title="Excluir">
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -200,7 +230,7 @@ const Veiculos = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 modal-overlay">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg modal-content">
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-              <p className="font-semibold text-gray-800">Novo veículo</p>
+              <p className="font-semibold text-gray-800">{editingId ? 'Editar veículo' : 'Novo veículo'}</p>
               <button onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-gray-600">
                 <X className="w-5 h-5" />
               </button>
@@ -234,7 +264,7 @@ const Veiculos = () => {
               </div>
               <div className="px-6 pb-5 flex gap-3 justify-end sm:col-span-2">
                 <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">Cancelar</button>
-                <button type="submit" className="px-4 py-2 text-sm font-medium bg-brand-500 hover:bg-brand-600 text-white rounded-lg transition-colors">Salvar veículo</button>
+                <button type="submit" className="px-4 py-2 text-sm font-medium bg-brand-500 hover:bg-brand-600 text-white rounded-lg transition-colors">{editingId ? 'Atualizar veículo' : 'Salvar veículo'}</button>
               </div>
             </form>
           </div>

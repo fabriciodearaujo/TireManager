@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
-import { Plus, Search, X, Trash2 } from 'lucide-react';
+import { Plus, Search, X, Trash2, Pencil } from 'lucide-react';
 import { useToast } from '../components/Toast';
 import Pagination from '../components/Pagination';
 import Tooltip from '../components/Tooltip';
@@ -17,6 +17,7 @@ const Pneus = () => {
   const [page, setPage] = useState(1);
   const pageSize = 10;
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const [editingId, setEditingId] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => { setPage(1); }, [searchTerm]);
@@ -38,6 +39,27 @@ const Pneus = () => {
     );
   });
   const paginatedPneus = filteredPneus.slice((page - 1) * pageSize, page * pageSize);
+
+  const openEdit = (pneu) => {
+    setFormData({
+      serial_number: pneu.serial_number,
+      marca: pneu.marca,
+      modelo: pneu.modelo || '',
+      medida: pneu.medida,
+      dot: pneu.dot || '',
+      data_compra: pneu.data_compra || '',
+      valor_compra: pneu.valor_compra || '',
+      condicao: pneu.condicao || 'Pneu novo',
+    });
+    setEditingId(pneu.id);
+    setIsModalOpen(true);
+  };
+
+  const openCreate = () => {
+    setFormData({ serial_number: '', marca: '', modelo: '', medida: '', dot: '', data_compra: '', valor_compra: '', condicao: 'Pneu novo' });
+    setEditingId(null);
+    setIsModalOpen(true);
+  };
 
   const fetchPneus = async () => {
     setLoading(true);
@@ -67,10 +89,18 @@ const Pneus = () => {
         modelo: formData.modelo || null,
         dot: formData.dot || null,
       };
-      const { data, error } = await supabase.from('pneus').insert([payload]).select();
-      if (error) throw error;
-      
-      toast('Pneu cadastrado com sucesso!', 'success');
+
+      if (editingId) {
+        const { error } = await supabase.from('pneus').update(payload).eq('id', editingId);
+        if (error) throw error;
+        toast('Pneu atualizado com sucesso!', 'success');
+      } else {
+        const { data, error } = await supabase.from('pneus').insert([payload]).select();
+        if (error) throw error;
+        toast('Pneu cadastrado com sucesso!', 'success');
+      }
+
+      setEditingId(null);
       setFormData({ serial_number: '', marca: '', modelo: '', medida: '', dot: '', data_compra: '', valor_compra: '', condicao: 'Pneu novo' });
       setPage(1);
       const { data: freshList } = await supabase.from('pneus').select('*').order('created_at', { ascending: false });
@@ -101,7 +131,7 @@ const Pneus = () => {
           <h2 className="text-base font-semibold text-gray-800">Cadastro de Pneus</h2>
           <p className="text-xs text-gray-400 mt-0.5">{pneus.length} pneus no sistema</p>
         </div>
-        <button onClick={() => setIsModalOpen(true)} className="inline-flex items-center gap-2 bg-brand-500 hover:bg-brand-600 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors">
+        <button onClick={openCreate} className="inline-flex items-center gap-2 bg-brand-500 hover:bg-brand-600 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors">
           <Plus className="w-4 h-4" /> Novo pneu
         </button>
       </div>
@@ -164,6 +194,9 @@ const Pneus = () => {
                   <td className="px-5 py-3 text-gray-500">{p.qtd_reformas}×</td>
                   <td className="px-5 py-3 flex items-center gap-3">
                     <button onClick={() => navigate(`/historico?serial=${p.serial_number}`)} className="text-brand-500 hover:text-brand-600 text-xs underline">Histórico</button>
+                    <button onClick={() => openEdit(p)} className="text-gray-400 hover:text-brand-600 transition-colors" title="Editar">
+                      <Pencil className="w-4 h-4" />
+                    </button>
                     <button onClick={() => setDeleteTarget(p.id)} className="text-red-400 hover:text-red-600 transition-colors" title="Excluir">
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -182,7 +215,7 @@ const Pneus = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 modal-overlay">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg modal-content">
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-              <p className="font-semibold text-gray-800">Novo pneu</p>
+              <p className="font-semibold text-gray-800">{editingId ? 'Editar pneu' : 'Novo pneu'}</p>
               <button onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-gray-600">
                 <X className="w-5 h-5" />
               </button>
@@ -235,7 +268,7 @@ const Pneus = () => {
               </div>
               <div className="px-6 pb-5 flex gap-3 justify-end sm:col-span-2">
                 <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">Cancelar</button>
-                <button type="submit" className="px-4 py-2 text-sm font-medium bg-brand-500 hover:bg-brand-600 text-white rounded-lg transition-colors">Salvar pneu</button>
+                <button type="submit" className="px-4 py-2 text-sm font-medium bg-brand-500 hover:bg-brand-600 text-white rounded-lg transition-colors">{editingId ? 'Atualizar pneu' : 'Salvar pneu'}</button>
               </div>
             </form>
           </div>
