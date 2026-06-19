@@ -57,6 +57,7 @@ CREATE TABLE reformas (
     numero_reforma INTEGER,
     observacoes TEXT,
     condicao_antes VARCHAR(30),
+    status_antes VARCHAR(20),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 

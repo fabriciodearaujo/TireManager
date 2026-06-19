@@ -80,7 +80,7 @@ const Reformas = () => {
     }
     setIsModalOpen(false);
     try {
-      const { data: pneuAtual } = await supabase.from('pneus').select('condicao').eq('id', formData.pneu_id).single();
+      const { data: pneuAtual } = await supabase.from('pneus').select('condicao, status').eq('id', formData.pneu_id).single();
 
       const payload = {
         ...formData,
@@ -89,9 +89,13 @@ const Reformas = () => {
         empresa: formData.empresa || null,
         observacoes: formData.observacoes || null,
         condicao_antes: pneuAtual?.condicao || null,
+        status_antes: pneuAtual?.status || null,
       };
       const { error: refError } = await supabase.from('reformas').insert([payload]);
       if (refError) throw refError;
+
+      // Update pneu status to 'reforma' (condition stays unchanged)
+      await supabase.from('pneus').update({ status: 'reforma' }).eq('id', formData.pneu_id);
 
       toast('Reforma registrada!', 'success');
       setFormData({ pneu_id: '', empresa: '', valor: '', data_envio: '', data_retorno: '', numero_reforma: '', observacoes: '' });
@@ -131,14 +135,17 @@ const Reformas = () => {
   const handleDelete = async (id) => {
     setDeleteTarget(null);
     try {
-      const { data: reform } = await supabase.from('reformas').select('pneu_id, condicao_antes').eq('id', id).single();
+      const { data: reform } = await supabase.from('reformas').select('pneu_id, condicao_antes, status_antes').eq('id', id).single();
       if (reform) {
         const { data: pneu } = await supabase.from('pneus').select('condicao, qtd_reformas').eq('id', reform.pneu_id).single();
+        const update = {};
+        if (reform.status_antes) update.status = reform.status_antes;
         if (pneu && pneu.condicao === 'Reformado' && reform.condicao_antes) {
-          await supabase.from('pneus').update({
-            condicao: reform.condicao_antes,
-            qtd_reformas: Math.max(0, (pneu.qtd_reformas || 0) - 1),
-          }).eq('id', reform.pneu_id);
+          update.condicao = reform.condicao_antes;
+          update.qtd_reformas = Math.max(0, (pneu.qtd_reformas || 0) - 1);
+        }
+        if (Object.keys(update).length > 0) {
+          await supabase.from('pneus').update(update).eq('id', reform.pneu_id);
         }
       }
       const { error } = await supabase.from('reformas').delete().eq('id', id);
