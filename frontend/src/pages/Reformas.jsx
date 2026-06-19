@@ -95,7 +95,8 @@ const Reformas = () => {
       if (refError) throw refError;
 
       // Update pneu status to 'reforma' (condition stays unchanged)
-      await supabase.from('pneus').update({ status: 'reforma' }).eq('id', formData.pneu_id);
+      const { error: statusError } = await supabase.from('pneus').update({ status: 'reforma' }).eq('id', formData.pneu_id);
+      if (statusError) throw statusError;
 
       toast('Reforma registrada!', 'success');
       setFormData({ pneu_id: '', empresa: '', valor: '', data_envio: '', data_retorno: '', numero_reforma: '', observacoes: '' });

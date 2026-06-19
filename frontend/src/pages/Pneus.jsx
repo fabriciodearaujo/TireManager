@@ -50,13 +50,14 @@ const Pneus = () => {
       data_compra: pneu.data_compra || '',
       valor_compra: pneu.valor_compra || '',
       condicao: pneu.condicao || 'Pneu novo',
+      status: pneu.status || 'estoque',
     });
     setEditingId(pneu.id);
     setIsModalOpen(true);
   };
 
   const openCreate = () => {
-    setFormData({ serial_number: '', marca: '', modelo: '', medida: '', dot: '', data_compra: '', valor_compra: '', condicao: 'Pneu novo' });
+    setFormData({ serial_number: '', marca: '', modelo: '', medida: '', dot: '', data_compra: '', valor_compra: '', condicao: 'Pneu novo', status: 'estoque' });
     setEditingId(null);
     setIsModalOpen(true);
   };
@@ -105,7 +106,7 @@ const Pneus = () => {
       }
 
       setEditingId(null);
-      setFormData({ serial_number: '', marca: '', modelo: '', medida: '', dot: '', data_compra: '', valor_compra: '', condicao: 'Pneu novo' });
+      setFormData({ serial_number: '', marca: '', modelo: '', medida: '', dot: '', data_compra: '', valor_compra: '', condicao: 'Pneu novo', status: 'estoque' });
       setPage(1);
       const { data: freshList } = await supabase.from('pneus').select('*').order('created_at', { ascending: false });
       if (freshList) { setPneus(freshList); setRefreshKey(k => k + 1); }
@@ -291,4 +292,6 @@ const Pneus = () => {
 };
 
 export default Pneus;
+
+
 
