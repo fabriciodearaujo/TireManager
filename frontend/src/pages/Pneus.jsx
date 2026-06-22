@@ -93,6 +93,7 @@ const Pneus = () => {
 
       if (editingId) {
         const updatePayload = { ...payload };
+        if (updatePayload.status === 'novo') updatePayload.status = 'estoque';
         if (updatePayload.condicao === 'Pneu novo' || updatePayload.condicao === 'Novo Usado') {
           updatePayload.qtd_reformas = 0;
         }
@@ -100,7 +101,8 @@ const Pneus = () => {
         if (error) throw error;
         toast('Pneu atualizado com sucesso!', 'success');
       } else {
-        const { data, error } = await supabase.from('pneus').insert([payload]).select();
+        const createPayload = { ...payload, status: 'estoque' };
+        const { data, error } = await supabase.from('pneus').insert([createPayload]).select();
         if (error) throw error;
         toast('Pneu cadastrado com sucesso!', 'success');
       }
