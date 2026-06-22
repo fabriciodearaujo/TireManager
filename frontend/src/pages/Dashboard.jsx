@@ -58,20 +58,21 @@ const Dashboard = () => {
     const fetchAlertas = async () => {
       try {
         const now = new Date().toISOString().split('T')[0];
-        const { count: pendentes } = await supabase.from('pneus').select('*', { count: 'exact', head: true }).eq('status', 'reforma');
-        const { count: criticos } = await supabase.from('pneus').select('*', { count: 'exact', head: true }).not('status', 'in', '("descartado","reforma")').gte('qtd_reformas', 2);
-        const { count: estoque } = await supabase.from('pneus').select('*', { count: 'exact', head: true }).eq('status', 'estoque');
+        const { data: todosPneus } = await supabase.from('pneus').select('id, status, qtd_reformas');
+        if (!todosPneus) return;
+        const pendentes = todosPneus.filter(p => p.status === 'reforma').length;
+        const criticos = todosPneus.filter(p => p.status !== 'descartado' && p.status !== 'reforma' && p.qtd_reformas >= 2).length;
+        const estoque = todosPneus.filter(p => p.status === 'estoque').length;
         const { data: refsAtrasadas } = await supabase.from('reformas').select('pneu_id').lt('data_retorno', now);
         let atrasadas = 0;
         if (refsAtrasadas && refsAtrasadas.length > 0) {
-          const ids = [...new Set(refsAtrasadas.map(r => r.pneu_id))];
-          const { count } = await supabase.from('pneus').select('*', { count: 'exact', head: true }).in('id', ids).eq('status', 'reforma');
-          atrasadas = count || 0;
+          const idsAtrasados = [...new Set(refsAtrasadas.map(r => r.pneu_id))];
+          atrasadas = todosPneus.filter(p => idsAtrasados.includes(p.id) && p.status === 'reforma').length;
         }
         setAlertas({
-          reformasPendentes: pendentes || 0,
-          pneusCriticos: criticos || 0,
-          estoqueBaixo: Math.max(0, 10 - (estoque || 0)),
+          reformasPendentes: pendentes,
+          pneusCriticos: criticos,
+          estoqueBaixo: Math.max(0, 10 - estoque),
           reformasAtrasadas: atrasadas,
         });
       } catch (err) {
