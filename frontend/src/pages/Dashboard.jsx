@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import { Package, Wrench, RefreshCw, Trash2, AlertCircle as AlertIcon, Clock as ClockIcon, AlertTriangle, TrendingDown } from 'lucide-react';
-import { Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from 'recharts';
+
 import CountUp from '../components/CountUp';
 
 const MOV_TYPE_LABELS = {
@@ -21,7 +21,7 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const [stats, setStats] = useState(null);
   const [recentMovs, setRecentMovs] = useState([]);
-  const [movementsByMonth, setMovementsByMonth] = useState([]);
+
   const [loadingStats, setLoadingStats] = useState(true);
   const [loadingMovs, setLoadingMovs] = useState(true);
   const [error, setError] = useState(null);
@@ -99,29 +99,6 @@ const Dashboard = () => {
       }
     };
 
-    const fetchMovementsByMonth = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('movimentacoes')
-          .select('data, tipo');
-
-        if (error) throw error;
-
-        const monthCount = {};
-        data.forEach(m => {
-          const date = new Date(m.data);
-          const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-          if (!monthCount[key]) monthCount[key] = { mes: key, instalações: 0, remoções: 0 };
-          if (m.tipo === 'instalacao') monthCount[key].instalações++;
-          else monthCount[key].remoções++;
-        });
-
-        setMovementsByMonth(Object.values(monthCount).slice(-6));
-      } catch (err) {
-        console.error('Error fetching monthly movements:', err);
-      }
-    };
-
     const fetchReformasMes = async () => {
       try {
         const now = new Date();
@@ -143,7 +120,7 @@ const Dashboard = () => {
     fetchAlertas();
     fetchReformasMes();
     fetchMovs();
-    fetchMovementsByMonth();
+
   }, []);
 
   if (error) return (
@@ -299,24 +276,6 @@ const Dashboard = () => {
             </div>
           </div>
         </div>
-      </div>
-
-      <div className="bg-white rounded-xl shadow-sm p-5 mb-6">
-        <p className="text-sm font-medium text-gray-700 mb-4">Movimentações por mês</p>
-        {movementsByMonth.length > 0 ? (
-          <ResponsiveContainer width="100%" height={250}>
-            <BarChart data={movementsByMonth}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-              <XAxis dataKey="mes" tick={{ fontSize: 12 }} />
-              <YAxis allowDecimals={false} tick={{ fontSize: 12 }} />
-              <Tooltip />
-              <Bar dataKey="instalações" fill="#0d68d8" radius={[4, 4, 0, 0]} name="Instalações" />
-              <Bar dataKey="remoções" fill="#d97706" radius={[4, 4, 0, 0]} name="Remoções" />
-            </BarChart>
-          </ResponsiveContainer>
-        ) : (
-          <div className="flex items-center justify-center h-[250px] text-gray-400 text-sm">Nenhuma movimentação registrada</div>
-        )}
       </div>
 
       <div className="bg-white rounded-xl shadow-sm overflow-hidden mb-6">
