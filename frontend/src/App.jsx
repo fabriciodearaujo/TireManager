@@ -147,7 +147,6 @@ const MainLayout = ({ children }) => {
               <span className="hidden sm:inline-block text-xs text-gray-400">
                 {new Date().toLocaleString('pt-BR', { month: 'long', year: 'numeric' })}
               </span>
-              <span className="w-2 h-2 rounded-full bg-green-400 inline-block"></span>
             </div>
           </header>
 
