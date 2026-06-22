@@ -207,6 +207,7 @@ body {
 .dark ::-webkit-scrollbar-track { background: #13151d; }
 .dark ::-webkit-scrollbar-thumb { background: #2d303b; border-radius: 8px; }
 .dark ::-webkit-scrollbar-thumb:hover { background: #3a3d4e; }
+.dark * { scrollbar-width: thin; scrollbar-color: #2d303b #13151d; }
 
 /* --- Gradient dashboard cards --- */
 .dark .from-blue-500 { --tw-gradient-from: #1d4ed8; }
@@ -218,31 +219,55 @@ body {
 .dark .to-amber-600 { --tw-gradient-to: #92400e; }
 .dark .to-red-600 { --tw-gradient-to: #991b1b; }
 
-/* --- Dashboard stats / reform card text --- */
-.dark .text-violet-600 { color: #a78bfa !important; }
+/* --- Dashboard cards (elevated subtle border) --- */
+.dark .rounded-xl.shadow-sm.bg-white {
+  border: 1px solid #262933 !important;
+}
 
 /* --- Login page dark mode --- */
 .dark .min-h-screen .bg-gradient-to-br { opacity: 0.9; }
+.dark .bg-surface.min-h-screen .w-full,
+.dark .bg-surface.flex.items-center.justify-center.p-6 {
+  background: #13151d !important;
+}
 .dark input[type="checkbox"] { accent-color: #5b9df5; }
+.dark .text-brand-200 { color: #85bfff !important; }
 
 /* --- Recharts (charts) --- */
 .dark .recharts-text { fill: #b0b3c0 !important; }
 .dark .recharts-cartesian-grid line { stroke: #262933 !important; }
 .dark .recharts-tooltip-wrapper .recharts-default-tooltip {
-  background: #1a1d27 !important;
-  border-color: #2d303b !important;
+  background: #1e212a !important;
+  border: 1px solid #2d303b !important;
+  border-radius: 8px !important;
+  padding: 8px 12px !important;
 }
-.dark .recharts-default-tooltip .recharts-tooltip-label { color: #e8eaed !important; }
-.dark .recharts-default-tooltip .recharts-tooltip-item { color: #b0b3c0 !important; }
+.dark .recharts-default-tooltip .recharts-tooltip-label {
+  color: #e8eaed !important;
+  font-weight: 600 !important;
+  font-size: 13px !important;
+}
+.dark .recharts-default-tooltip .recharts-tooltip-item {
+  color: #b0b3c0 !important;
+  font-size: 12px !important;
+}
 .dark .recharts-legend-item-text { color: #b0b3c0 !important; }
+.dark .recharts-surface { background: transparent; }
 
 /* --- Dropdown suggestion list (auto-complete) --- */
 .dark .absolute.z-10.bg-white {
   background: #1a1d27 !important;
-  border-color: #2d303b !important;
+  border: 1px solid #2d303b !important;
+  border-radius: 8px !important;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.5) !important;
+}
+.dark .absolute.z-10.bg-white button {
+  color: #d0d3dc !important;
+  border-bottom-color: #262933 !important;
 }
 .dark .absolute.z-10.bg-white button:hover {
   background: #1e212a !important;
+  color: #e8eaed !important;
 }
 
 /* --- Chart toggle --- */
