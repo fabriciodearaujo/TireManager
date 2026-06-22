@@ -1,16 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../supabaseClient';
 import { Package, Wrench, RefreshCw, Trash2, AlertCircle as AlertIcon, Clock as ClockIcon } from 'lucide-react';
-import { PieChart, Pie, Cell, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from 'recharts';
-import { PieChart as PieChartIcon, BarChart3 } from 'lucide-react';
+import { Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from 'recharts';
 import CountUp from '../components/CountUp';
 
 const MOV_TYPE_LABELS = {
   instalacao: 'Instalação',
   remocao: 'Remoção',
 };
-
-const COLORS = ['#0d68d8', '#16a34a', '#d97706', '#ef4444'];
 
 const cards = [
   { key: 'em_estoque', label: 'Em estoque', icon: Package, gradient: 'from-blue-500 to-blue-600', suffix: 'prontos para uso' },
@@ -26,7 +23,6 @@ const Dashboard = () => {
   const [loadingStats, setLoadingStats] = useState(true);
   const [loadingMovs, setLoadingMovs] = useState(true);
   const [error, setError] = useState(null);
-  const [chartType, setChartType] = useState('pie');
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -125,13 +121,6 @@ const Dashboard = () => {
 
   if (!stats) return null;
 
-  const pieData = [
-    { name: 'Estoque', value: stats.pneus.em_estoque },
-    { name: 'Instalados', value: stats.pneus.instalados },
-    { name: 'Reforma', value: stats.pneus.em_reforma },
-    { name: 'Descartados', value: stats.pneus.descartados },
-  ].filter(d => d.value > 0);
-
   return (
     <div>
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
@@ -165,60 +154,23 @@ const Dashboard = () => {
         </div>
 
         <div className="bg-white rounded-xl shadow-sm p-5">
-          <div className="flex items-center justify-between mb-4">
-            <p className="text-sm font-medium text-gray-700">Distribuição dos pneus</p>
-            <div className="flex bg-gray-100 rounded-lg p-0.5">
-              <button onClick={() => setChartType('pie')} className={`flex items-center gap-1 px-2.5 py-1.5 text-xs rounded-md transition-colors ${chartType === 'pie' ? 'bg-white shadow-sm text-gray-800 font-medium' : 'text-gray-400 hover:text-gray-600'}`}>
-                <PieChartIcon className="w-3.5 h-3.5" /> Pizza
-              </button>
-              <button onClick={() => setChartType('column')} className={`flex items-center gap-1 px-2.5 py-1.5 text-xs rounded-md transition-colors ${chartType === 'column' ? 'bg-white shadow-sm text-gray-800 font-medium' : 'text-gray-400 hover:text-gray-600'}`}>
-                <BarChart3 className="w-3.5 h-3.5" /> Colunas
-              </button>
+          <p className="text-sm font-medium text-gray-700 mb-4">Alertas Rápidos</p>
+          <div className="space-y-3">
+            <div className="flex items-start gap-3 p-3 bg-amber-50 rounded-lg border border-amber-100">
+              <AlertIcon className="w-4 h-4 text-amber-600 shrink-0" />
+              <div>
+                <p className="text-sm font-medium text-amber-800">Verificar pneus críticos</p>
+                <p className="text-xs text-amber-600 mt-0.5">Alguns pneus podem estar próximos do limite.</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3 p-3 bg-blue-50 rounded-lg border border-blue-100">
+              <ClockIcon className="w-4 h-4 text-blue-600 shrink-0" />
+              <div>
+                <p className="text-sm font-medium text-blue-800">Reformas pendentes</p>
+                <p className="text-xs text-blue-600 mt-0.5">Verificar prazos de retorno.</p>
+              </div>
             </div>
           </div>
-          {pieData.length > 0 ? (
-            chartType === 'pie' ? (
-              <div className="flex items-center justify-center gap-4">
-                <ResponsiveContainer width={220} height={220}>
-                  <PieChart>
-                    <Pie data={pieData} cx="50%" cy="50%" outerRadius={80} dataKey="value" label={({ name, percent }) => `${(percent * 100).toFixed(0)}%`} labelLine={false}>
-                      {pieData.map((_, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip formatter={(value, name) => [value, name]} />
-                  </PieChart>
-                </ResponsiveContainer>
-                <div className="flex flex-col gap-1.5 text-xs">
-                  {pieData.map((d, i) => (
-                    <div key={d.name} className="flex items-center gap-2">
-                      <span className="w-3 h-3 rounded-sm inline-block" style={{ backgroundColor: COLORS[i % COLORS.length] }}></span>
-                      <span className="text-gray-600">{d.name}</span>
-                      <span className="text-gray-800 font-medium">{d.value}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ) : (
-              <div className="flex items-center justify-center">
-                <ResponsiveContainer width={260} height={200}>
-                  <BarChart data={pieData} layout="vertical">
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                    <XAxis type="number" tick={{ fontSize: 11 }} />
-                    <YAxis type="category" dataKey="name" width={80} tick={{ fontSize: 11 }} />
-                    <Tooltip />
-                    <Bar dataKey="value" radius={[0, 4, 4, 0]}>
-                      {pieData.map((_, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                      ))}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            )
-          ) : (
-            <div className="flex items-center justify-center h-[180px] text-gray-400 text-sm">Nenhum pneu cadastrado</div>
-          )}
         </div>
       </div>
 
@@ -240,28 +192,7 @@ const Dashboard = () => {
         )}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
-        <div className="bg-white rounded-xl shadow-sm p-5">
-          <p className="text-sm font-medium text-gray-700 mb-4">Alertas Rápidos</p>
-          <div className="space-y-3">
-            <div className="flex items-start gap-3 p-3 bg-amber-50 rounded-lg border border-amber-100">
-              <AlertIcon className="w-4 h-4 text-amber-600 shrink-0" />
-              <div>
-                <p className="text-sm font-medium text-amber-800">Verificar pneus críticos</p>
-                <p className="text-xs text-amber-600 mt-0.5">Alguns pneus podem estar próximos do limite.</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3 p-3 bg-blue-50 rounded-lg border border-blue-100">
-              <ClockIcon className="w-4 h-4 text-blue-600 shrink-0" />
-              <div>
-                <p className="text-sm font-medium text-blue-800">Reformas pendentes</p>
-                <p className="text-xs text-blue-600 mt-0.5">Verificar prazos de retorno.</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+      <div className="bg-white rounded-xl shadow-sm overflow-hidden mb-6">
           <div className="px-5 py-4 border-b border-gray-100">
             <p className="text-sm font-medium text-gray-700">Últimas movimentações</p>
           </div>
@@ -303,7 +234,6 @@ const Dashboard = () => {
                 )}
               </tbody>
             </table>
-          </div>
         </div>
       </div>
     </div>
