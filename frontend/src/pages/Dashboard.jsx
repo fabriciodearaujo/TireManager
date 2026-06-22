@@ -241,58 +241,63 @@ const Dashboard = () => {
         })}
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm py-3 px-5 mb-4 flex items-center gap-4 flex-wrap">
-        <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Reformas no mês</span>
-        <span className="text-sm text-gray-700">{new Date().toLocaleString('pt-BR', { month: 'short', year: 'numeric' })}</span>
-        <div className="h-4 w-px bg-gray-200" />
-        <span className="text-lg font-semibold text-violet-600"><CountUp end={reformasMes.total} duration={800} /></span>
-        <span className="text-xs text-gray-400">reformas</span>
-        <div className="h-4 w-px bg-gray-200" />
-        <span className="text-sm font-medium text-gray-700">R$ {reformasMes.custo_total.toFixed(2)}</span>
-        <span className="text-xs text-gray-400">total</span>
-        <div className="h-4 w-px bg-gray-200" />
-        <span className="text-xs text-gray-400">Média:</span>
-        <span className="text-sm font-medium text-gray-700">R$ {reformasMes.total > 0 ? (reformasMes.custo_total / reformasMes.total).toFixed(2) : '0,00'}</span>
-        {alertas.reformasPendentes > 0 && (
-          <>
-            <div className="h-4 w-px bg-gray-200" />
-            <span className="text-xs text-amber-600 font-medium">{alertas.reformasPendentes} pendente(s)</span>
-          </>
-        )}
-        {alertas.reformasAtrasadas > 0 && (
-          <>
-            <div className="h-4 w-px bg-gray-200" />
-            <span className="text-xs text-red-600 font-medium">{alertas.reformasAtrasadas} atrasada(s)</span>
-          </>
-        )}
-      </div>
-
-      <div className="bg-white rounded-xl shadow-sm p-5 mb-6">
-        <p className="text-sm font-medium text-gray-700 mb-3">Alertas Rápidos</p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-          {alertItems.map(a => {
-            const Icon = a.icon;
-            return (
-              <button
-                key={a.id}
-                onClick={() => navigate(a.link)}
-                className={`flex items-start gap-3 p-3 rounded-lg border ${a.bg} ${a.border} hover:opacity-80 transition-opacity text-left`}
-              >
-                <Icon className={`w-4 h-4 ${a.iconColor} shrink-0 mt-0.5`} />
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <p className={`text-sm font-medium ${a.titleColor}`}>{a.title}</p>
-                    {a.count > 0 && (
-                      <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${a.bg} ${a.iconColor} border ${a.border}`}>
-                        {a.count}
-                      </span>
-                    )}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+        <div className="bg-white rounded-xl shadow-sm p-5">
+          <p className="text-sm font-medium text-gray-700 mb-1">Alertas Rápidos</p>
+          <div className="space-y-2">
+            {alertItems.map(a => {
+              const Icon = a.icon;
+              return (
+                <button
+                  key={a.id}
+                  onClick={() => navigate(a.link)}
+                  className={`w-full flex items-start gap-3 p-3 rounded-lg border ${a.bg} ${a.border} hover:opacity-80 transition-opacity text-left`}
+                >
+                  <Icon className={`w-4 h-4 ${a.iconColor} shrink-0 mt-0.5`} />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <p className={`text-sm font-medium ${a.titleColor}`}>{a.title}</p>
+                      {a.count > 0 && (
+                        <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${a.bg} ${a.iconColor} border ${a.border}`}>
+                          {a.count}
+                        </span>
+                      )}
+                    </div>
+                    <p className={`text-xs ${a.descColor} mt-0.5`}>{a.desc}</p>
                   </div>
-                  <p className={`text-xs ${a.descColor} mt-0.5`}>{a.desc}</p>
-                </div>
-              </button>
-            );
-          })}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="bg-white rounded-xl shadow-sm p-5">
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-sm font-medium text-gray-700">Reformas no mês</p>
+            <span className="text-xs font-medium text-gray-400 bg-gray-100 px-2 py-1 rounded">{new Date().toLocaleString('pt-BR', { month: 'short', year: 'numeric' })}</span>
+          </div>
+          <div className="flex items-baseline gap-3 mb-4">
+            <span className="text-3xl font-semibold text-violet-600"><CountUp end={reformasMes.total} duration={800} /></span>
+            <span className="text-sm text-gray-400">reformas</span>
+          </div>
+          <div className="border-t border-gray-100 pt-3 space-y-2 text-sm">
+            <div className="flex justify-between">
+              <span className="text-gray-500">Custo total</span>
+              <span className="font-medium text-gray-800">R$ {reformasMes.custo_total.toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-500">Custo médio</span>
+              <span className="font-medium text-gray-800">R$ {reformasMes.total > 0 ? (reformasMes.custo_total / reformasMes.total).toFixed(2) : '0,00'}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-500">Aguardando retorno</span>
+              <span className={`font-medium ${alertas.reformasPendentes > 0 ? 'text-amber-600' : 'text-gray-800'}`}>{alertas.reformasPendentes} pneu(s)</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-500">Prazo vencido</span>
+              <span className={`font-medium ${alertas.reformasAtrasadas > 0 ? 'text-red-600' : 'text-gray-800'}`}>{alertas.reformasAtrasadas} reforma(s)</span>
+            </div>
+          </div>
         </div>
       </div>
 
