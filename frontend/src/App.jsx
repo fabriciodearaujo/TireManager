@@ -89,31 +89,31 @@ const MainLayout = ({ children }) => {
 
         <nav className="flex-1 overflow-y-auto py-3">
           <p className="px-5 pt-2 pb-1 text-[10px] font-semibold uppercase tracking-widest text-gray-400">Principal</p>
-          <Link to="/" className="flex items-center gap-3 px-5 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+          <Link to="/" onClick={() => setIsSidebarOpen(false)} className="flex items-center gap-3 px-5 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
             <LayoutDashboard className="w-4 h-4" /> Dashboard
           </Link>
           
           <p className="px-5 pt-4 pb-1 text-[10px] font-semibold uppercase tracking-widest text-gray-400">Cadastros</p>
-          <Link to="/pneus" className="flex items-center gap-3 px-5 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+          <Link to="/pneus" onClick={() => setIsSidebarOpen(false)} className="flex items-center gap-3 px-5 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
             <CircleDot className="w-4 h-4" /> Pneus
           </Link>
-          <Link to="/veiculos" className="flex items-center gap-3 px-5 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+          <Link to="/veiculos" onClick={() => setIsSidebarOpen(false)} className="flex items-center gap-3 px-5 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
             <Truck className="w-4 h-4" /> Veículos
           </Link>
 
           <p className="px-5 pt-4 pb-1 text-[10px] font-semibold uppercase tracking-widest text-gray-400">Operações</p>
-          <Link to="/movimentacoes" className="flex items-center gap-3 px-5 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+          <Link to="/movimentacoes" onClick={() => setIsSidebarOpen(false)} className="flex items-center gap-3 px-5 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
             <ArrowLeftRight className="w-4 h-4" /> Instalações
           </Link>
-          <Link to="/reformas" className="flex items-center gap-3 px-5 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+          <Link to="/reformas" onClick={() => setIsSidebarOpen(false)} className="flex items-center gap-3 px-5 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
             <RefreshCw className="w-4 h-4" /> Reformas
           </Link>
-          <Link to="/historico" className="flex items-center gap-3 px-5 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+          <Link to="/historico" onClick={() => setIsSidebarOpen(false)} className="flex items-center gap-3 px-5 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
             <History className="w-4 h-4" /> Histórico
           </Link>
 
           <p className="px-5 pt-4 pb-1 text-[10px] font-semibold uppercase tracking-widest text-gray-400">Gestão</p>
-          <Link to="/relatorios" className="flex items-center gap-3 px-5 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+          <Link to="/relatorios" onClick={() => setIsSidebarOpen(false)} className="flex items-center gap-3 px-5 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
             <FileText className="w-4 h-4" /> Relatórios
           </Link>
         </nav>

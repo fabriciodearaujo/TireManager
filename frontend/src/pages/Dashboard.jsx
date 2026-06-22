@@ -26,6 +26,7 @@ const Dashboard = () => {
   const [loadingMovs, setLoadingMovs] = useState(true);
   const [error, setError] = useState(null);
   const [alertas, setAlertas] = useState({ reformasPendentes: 0, pneusCriticos: 0, estoqueBaixo: 0, reformasAtrasadas: 0 });
+  const [reformasMes, setReformasMes] = useState({ total: 0, custo_total: 0 });
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -42,10 +43,6 @@ const Dashboard = () => {
             em_reforma: s.em_reforma || 0,
             descartados: s.descartados || 0,
           },
-          reformasMes: {
-            total: s.reformas_mes_total || 0,
-            custo_total: s.reformas_mes_custo || 0
-          }
         });
       } catch (err) {
         console.error('Error fetching stats:', err);
@@ -125,8 +122,26 @@ const Dashboard = () => {
       }
     };
 
+    const fetchReformasMes = async () => {
+      try {
+        const now = new Date();
+        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+        const { data, error } = await supabase
+          .from('reformas')
+          .select('valor')
+          .gte('data_envio', startOfMonth);
+        if (error) throw error;
+        const total = data ? data.length : 0;
+        const custo_total = data ? data.reduce((sum, r) => sum + (Number(r.valor) || 0), 0) : 0;
+        setReformasMes({ total, custo_total });
+      } catch (err) {
+        console.error('Error fetching reformas do mês:', err);
+      }
+    };
+
     fetchStats();
     fetchAlertas();
+    fetchReformasMes();
     fetchMovs();
     fetchMovementsByMonth();
   }, []);
@@ -233,8 +248,8 @@ const Dashboard = () => {
             <span className="text-xs text-gray-400">{new Date().toLocaleString('pt-BR', { month: 'short', year: 'numeric' })}</span>
           </div>
           <div className="flex items-baseline gap-2 mb-4">
-            <span className="text-3xl font-semibold text-violet-600"><CountUp end={stats.reformasMes.total} duration={800} /></span>
-            <span className="text-sm text-gray-400">reformas · <strong className="text-gray-600">R$ {stats.reformasMes.custo_total}</strong></span>
+            <span className="text-3xl font-semibold text-violet-600"><CountUp end={reformasMes.total} duration={800} /></span>
+            <span className="text-sm text-gray-400">reformas · <strong className="text-gray-600">R$ {reformasMes.custo_total.toFixed(2)}</strong></span>
           </div>
           <div className="text-xs text-gray-400 italic">Dados consolidados do mês atual.</div>
         </div>
