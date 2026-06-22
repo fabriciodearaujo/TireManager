@@ -192,3 +192,27 @@ FROM pneus p WHERE p.serial_number = 'PN-22004';
 INSERT INTO reformas (pneu_id, empresa, valor, data_envio, data_retorno, numero_reforma, observacoes, condicao_antes, status_antes)
 SELECT p.id, 'PneusPrime Reformas', 540.00, '2026-02-20', '2026-02-28', 2, 'Reforma completa', p.condicao, p.status
 FROM pneus p WHERE p.serial_number = 'PN-22006';
+
+-- 5. MAIS REFORMAS EM JUNHO/2026 (para alimentar "Reformas no mês")
+INSERT INTO reformas (pneu_id, empresa, valor, data_envio, data_retorno, numero_reforma, observacoes, condicao_antes, status_antes)
+SELECT p.id, 'Borracheiro Express', 410.00, '2026-06-10', '2026-06-17', 1, 'Primeira reforma - pneu novo', p.condicao, p.status
+FROM pneus p WHERE p.serial_number = 'PN-24001';
+
+INSERT INTO reformas (pneu_id, empresa, valor, data_envio, data_retorno, numero_reforma, observacoes, condicao_antes, status_antes)
+SELECT p.id, 'Reformadora ABC', 480.00, '2026-06-12', '2026-06-19', 1, 'Primeira reforma', p.condicao, p.status
+FROM pneus p WHERE p.serial_number = 'PN-24006';
+
+INSERT INTO reformas (pneu_id, empresa, valor, data_envio, data_retorno, numero_reforma, observacoes, condicao_antes, status_antes)
+SELECT p.id, 'PneusPrime Reformas', 530.00, '2026-06-15', '2026-06-22', 1, 'Primeira reforma - recapagem', p.condicao, p.status
+FROM pneus p WHERE p.serial_number = 'PN-24011';
+
+INSERT INTO reformas (pneu_id, empresa, valor, data_envio, data_retorno, numero_reforma, observacoes, condicao_antes, status_antes)
+SELECT p.id, 'Borracheiro Express', 390.00, '2026-06-17', '2026-06-24', 1, 'Reforma econômica', p.condicao, p.status
+FROM pneus p WHERE p.serial_number = 'PN-24015';
+
+INSERT INTO reformas (pneu_id, empresa, valor, data_envio, data_retorno, numero_reforma, observacoes, condicao_antes, status_antes)
+SELECT p.id, 'Reformadora ABC', 460.00, '2026-06-20', '2026-06-27', 1, 'Reforma padrão - primeira', p.condicao, p.status
+FROM pneus p WHERE p.serial_number = 'PN-24018';
+
+-- Atualizar status dos pneus que foram para reforma em Junho
+UPDATE pneus SET status = 'reforma' WHERE serial_number IN ('PN-24001', 'PN-24006', 'PN-24011', 'PN-24015', 'PN-24018');
