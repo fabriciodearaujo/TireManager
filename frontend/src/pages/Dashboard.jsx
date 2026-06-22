@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
-import { Package, Wrench, RefreshCw, Trash2, AlertCircle as AlertIcon, Clock as ClockIcon } from 'lucide-react';
+import { Package, Wrench, RefreshCw, Trash2, AlertCircle as AlertIcon, Clock as ClockIcon, AlertTriangle, TrendingDown } from 'lucide-react';
 import { Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from 'recharts';
 import CountUp from '../components/CountUp';
 
@@ -17,12 +18,14 @@ const cards = [
 ];
 
 const Dashboard = () => {
+  const navigate = useNavigate();
   const [stats, setStats] = useState(null);
   const [recentMovs, setRecentMovs] = useState([]);
   const [movementsByMonth, setMovementsByMonth] = useState([]);
   const [loadingStats, setLoadingStats] = useState(true);
   const [loadingMovs, setLoadingMovs] = useState(true);
   const [error, setError] = useState(null);
+  const [alertas, setAlertas] = useState({ reformasPendentes: 0, pneusCriticos: 0, estoqueBaixo: 0, reformasAtrasadas: 0 });
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -49,6 +52,30 @@ const Dashboard = () => {
         setError(err.message);
       } finally {
         setLoadingStats(false);
+      }
+    };
+
+    const fetchAlertas = async () => {
+      try {
+        const now = new Date().toISOString().split('T')[0];
+        const { count: pendentes } = await supabase.from('pneus').select('*', { count: 'exact', head: true }).eq('status', 'reforma');
+        const { count: criticos } = await supabase.from('pneus').select('*', { count: 'exact', head: true }).not('status', 'in', '("descartado","reforma")').gte('qtd_reformas', 2);
+        const { count: estoque } = await supabase.from('pneus').select('*', { count: 'exact', head: true }).eq('status', 'estoque');
+        const { data: refsAtrasadas } = await supabase.from('reformas').select('pneu_id').lt('data_retorno', now);
+        let atrasadas = 0;
+        if (refsAtrasadas && refsAtrasadas.length > 0) {
+          const ids = [...new Set(refsAtrasadas.map(r => r.pneu_id))];
+          const { count } = await supabase.from('pneus').select('*', { count: 'exact', head: true }).in('id', ids).eq('status', 'reforma');
+          atrasadas = count || 0;
+        }
+        setAlertas({
+          reformasPendentes: pendentes || 0,
+          pneusCriticos: criticos || 0,
+          estoqueBaixo: Math.max(0, 10 - (estoque || 0)),
+          reformasAtrasadas: atrasadas,
+        });
+      } catch (err) {
+        console.error('Error fetching alertas:', err);
       }
     };
 
@@ -98,6 +125,7 @@ const Dashboard = () => {
     };
 
     fetchStats();
+    fetchAlertas();
     fetchMovs();
     fetchMovementsByMonth();
   }, []);
@@ -120,6 +148,63 @@ const Dashboard = () => {
   );
 
   if (!stats) return null;
+
+  const alertItems = [
+    {
+      id: 'reformas',
+      icon: ClockIcon,
+      bg: 'bg-amber-50',
+      border: 'border-amber-100',
+      iconColor: 'text-amber-600',
+      titleColor: 'text-amber-800',
+      descColor: 'text-amber-600',
+      title: 'Reformas pendentes',
+      desc: `${alertas.reformasPendentes} pneu(s) aguardando retorno da reformadora.`,
+      count: alertas.reformasPendentes,
+      link: '/reformas',
+    },
+    {
+      id: 'criticos',
+      icon: AlertTriangle,
+      bg: 'bg-red-50',
+      border: 'border-red-100',
+      iconColor: 'text-red-600',
+      titleColor: 'text-red-800',
+      descColor: 'text-red-600',
+      title: 'Pneus críticos',
+      desc: `${alertas.pneusCriticos} pneu(s) com 2+ reformas — avalie necessidade de substituição.`,
+      count: alertas.pneusCriticos,
+      link: '/pneus',
+    },
+    {
+      id: 'atrasadas',
+      icon: TrendingDown,
+      bg: 'bg-orange-50',
+      border: 'border-orange-100',
+      iconColor: 'text-orange-600',
+      titleColor: 'text-orange-800',
+      descColor: 'text-orange-600',
+      title: 'Reformas em atraso',
+      desc: `${alertas.reformasAtrasadas} reforma(s) com data de retorno vencida.`,
+      count: alertas.reformasAtrasadas,
+      link: '/reformas',
+    },
+    {
+      id: 'estoque',
+      icon: Package,
+      bg: 'bg-blue-50',
+      border: 'border-blue-100',
+      iconColor: 'text-blue-600',
+      titleColor: 'text-blue-800',
+      descColor: 'text-blue-600',
+      title: 'Estoque baixo',
+      desc: alertas.estoqueBaixo > 0
+        ? `Apenas ${stats.pneus.em_estoque} pneu(s) em estoque — ideal mínimo 10.`
+        : `${stats.pneus.em_estoque} pneu(s) em estoque — nível adequado.`,
+      count: stats.pneus.em_estoque,
+      link: '/pneus',
+    },
+  ];
 
   return (
     <div>
@@ -155,21 +240,30 @@ const Dashboard = () => {
 
         <div className="bg-white rounded-xl shadow-sm p-5">
           <p className="text-sm font-medium text-gray-700 mb-4">Alertas Rápidos</p>
-          <div className="space-y-3">
-            <div className="flex items-start gap-3 p-3 bg-amber-50 rounded-lg border border-amber-100">
-              <AlertIcon className="w-4 h-4 text-amber-600 shrink-0" />
-              <div>
-                <p className="text-sm font-medium text-amber-800">Verificar pneus críticos</p>
-                <p className="text-xs text-amber-600 mt-0.5">Alguns pneus podem estar próximos do limite.</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3 p-3 bg-blue-50 rounded-lg border border-blue-100">
-              <ClockIcon className="w-4 h-4 text-blue-600 shrink-0" />
-              <div>
-                <p className="text-sm font-medium text-blue-800">Reformas pendentes</p>
-                <p className="text-xs text-blue-600 mt-0.5">Verificar prazos de retorno.</p>
-              </div>
-            </div>
+          <div className="space-y-2">
+            {alertItems.map(a => {
+              const Icon = a.icon;
+              return (
+                <button
+                  key={a.id}
+                  onClick={() => navigate(a.link)}
+                  className={`w-full flex items-start gap-3 p-3 rounded-lg border ${a.bg} ${a.border} hover:opacity-80 transition-opacity text-left`}
+                >
+                  <Icon className={`w-4 h-4 ${a.iconColor} shrink-0 mt-0.5`} />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <p className={`text-sm font-medium ${a.titleColor}`}>{a.title}</p>
+                      {a.count > 0 && (
+                        <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${a.bg} ${a.iconColor} border ${a.border}`}>
+                          {a.count}
+                        </span>
+                      )}
+                    </div>
+                    <p className={`text-xs ${a.descColor} mt-0.5`}>{a.desc}</p>
+                  </div>
+                </button>
+              );
+            })}
           </div>
         </div>
       </div>
