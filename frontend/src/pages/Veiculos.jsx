@@ -235,7 +235,7 @@ const Veiculos = () => {
                 <X className="w-5 h-5" />
               </button>
             </div>
-            <form onSubmit={handleSubmit} className="px-6 py-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <form onSubmit={handleSubmit} className="px-6 pt-5 pb-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="flex flex-col gap-1.5">
                 <label className="text-xs text-gray-500">Placa *</label>
                 <input required type="text" value={formData.placa} onChange={e => setFormData({...formData, placa: e.target.value.toUpperCase()})} className="border border-gray-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-brand-400 uppercase font-mono" />
@@ -262,7 +262,7 @@ const Veiculos = () => {
                 <label className="text-xs text-gray-500">Centro de custo</label>
                 <input type="text" value={formData.centro_custo} onChange={e => setFormData({...formData, centro_custo: e.target.value})} className="border border-gray-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-brand-400" />
               </div>
-              <div className="px-6 pb-5 flex gap-3 justify-end sm:col-span-2">
+              <div className="flex gap-3 justify-end sm:col-span-2 pt-2">
                 <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">Cancelar</button>
                 <button type="submit" className="px-4 py-2 text-sm font-medium bg-brand-500 hover:bg-brand-600 text-white rounded-lg transition-colors">{editingId ? 'Atualizar veículo' : 'Salvar veículo'}</button>
               </div>
